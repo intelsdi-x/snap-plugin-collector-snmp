@@ -1,0 +1,37 @@
+{
+    "__metric1__": {
+      "OID": ".1.3.6.1.2.1.1.9.1.3.1"
+    },
+  "__metric2__": {
+      "OID": ".1.3.6.1.2.1.1.9.1.3",
+      "mode": "multiple",
+      "prefix": {
+        "source": "snmp",
+        "OID": ".1.3.6.1.2.1.1.9.1.3"
+      },
+      "suffix": {
+        "source": "snmp",
+        "OID": ".1.3.6.1.2.1.1.9.1.3"
+      },
+      "scale": 1.25,
+      "shift": 2,
+      "unit": "",
+      "description": "description"
+    },
+  "__metric3__": {
+      "OID": ".1.3.6.1.2.1.1.9.1.3",
+      "mode": "multiple",
+      "prefix": {
+        "source": "string",
+        "string": "prefix"
+      },
+      "suffix": {
+        "source": "string",
+        "string": "suffix"
+      },
+      "scale": 1.25,
+      "shift": 2,
+      "unit": "",
+      "description": "description"
+    }
+}

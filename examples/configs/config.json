@@ -1,0 +1,15 @@
+{
+    "control": {
+		"plugins": {
+        "collector": {
+            "snmp": {
+                "all": {
+                    "setfile": "setfile.json"
+                }
+            }
+      },
+        "publisher": {},
+        "processor": {}
+		}
+    }
+}
