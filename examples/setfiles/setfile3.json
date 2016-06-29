@@ -1,0 +1,84 @@
+[
+ {
+  "mode": "walk",
+  "namespace": [
+    {"source": "string", "string": "mib-2"},
+    {"source": "string", "string": "system"},
+    {"source": "index", "name": "index7", "description": "number from OID", "oid_part": 7},
+    {"source": "index", "name": "index8", "description": "number from OID", "oid_part": 8},
+    {"source": "string", "string": "value"}
+  ],
+  "OID": ".1.3.6.1.2.1.1",
+  "scale": 1.0,
+  "shift": 0,
+  "unit": "unit",
+  "description": "description of metric"
+},
+   {
+  "mode": "table",
+  "namespace": [
+    {"source": "string", "string": "system"},
+    {"source": "string", "string": "sysORTable"},
+    {"source": "string", "string": "sysOREntry"},
+    {"source": "string", "string": "sysORDescr"},
+    {"source": "snmp", "name": "snmp part", "description": "part received through SNMP request", "OID": ".1.3.6.1.2.1.1.9.1.3"},
+    {"source": "string", "string": "value"}
+  ],
+  "OID": ".1.3.6.1.2.1.1.9.1.4",
+  "scale": 1.0,
+  "shift": 0,
+  "unit": "unit",
+  "description": "description of metric"
+},
+   {
+    "mode": "single",
+    "namespace": [
+      {"source": "string", "string": "hostName"}
+    ],
+    "OID": ".1.3.6.1.2.1.1.5.0",
+    "description": "host name"
+  },
+   {
+    "mode": "single",
+    "namespace": [
+      {"source": "snmp", "name": "e-mail", "description": "part for email", "OID": ".1.3.6.1.2.1.1.4.0"},
+      {"source": "index", "name": "index name", "description": "part for index", "oid_part": 8},
+      {"source": "string", "string": "name"}
+    ],
+    "OID": ".1.3.6.1.2.1.1.5.0",
+    "description": "host name - with dynamic namespace"
+  },
+  {
+    "mode": "single",
+    "namespace": [
+      {"source": "string", "string": "hrSystemNumUsers"}
+    ],
+    "OID": ".1.3.6.1.2.1.25.1.5.0",
+    "scale": 1,
+    "shift": 0,
+    "unit": "",
+    "description": "Numeric metric"
+  },
+   {
+    "mode": "single",
+    "namespace": [
+      {"source": "string", "string": "hrSystemProcesses"}
+    ],
+    "OID": ".1.3.6.1.2.1.25.1.6.0",
+    "scale": 1,
+    "shift": 0,
+    "unit": "",
+    "description": "Numeric metric"
+  },
+  {
+    "mode": "single",
+    "namespace": [
+      {"source": "string", "string": "sysServicesModified"}
+    ],
+    "OID": ".1.3.6.1.2.1.1.7.0",
+    "scale": 0.5,
+    "shift": 18.5,
+    "unit": "",
+    "description": "Numeric metric to show usage of scale and shift"
+  }
+]
