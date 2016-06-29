@@ -40,30 +40,27 @@ const (
 	WRONG_METRIC_CONFIG_4
 	WRONG_METRIC_CONFIG_5
 	WRONG_METRIC_CONFIG_6
-	WRONG_METRIC_CONFIG_7
-	WRONG_METRIC_CONFIG_8
-	WRONG_METRIC_CONFIG_9
 	SETFILE_NOT_FOUND
 	EMPTY_SETFILE
 	WRONG_SETFILE
-	CORRECT_HOST_CONFIG_1
-	CORRECT_HOST_CONFIG_2
-	CORRECT_HOST_CONFIG_3
-	WRONG_HOST_CONFIG_1
-	WRONG_HOST_CONFIG_2
-	WRONG_HOST_CONFIG_3
-	WRONG_HOST_CONFIG_4
-	WRONG_HOST_CONFIG_5
-	WRONG_HOST_CONFIG_6
-	WRONG_HOST_CONFIG_7
-	WRONG_HOST_CONFIG_8
-	WRONG_HOST_CONFIG_9
-	WRONG_HOST_CONFIG_10
-	WRONG_HOST_CONFIG_11
-	WRONG_HOST_CONFIG_12
-	WRONG_HOST_CONFIG_13
-	WRONG_HOST_CONFIG_14
-	EMPTY_HOST_CONFIG
+	CORRECT_AGENT_CONFIG_1
+	CORRECT_AGENT_CONFIG_2
+	CORRECT_AGENT_CONFIG_3
+	WRONG_AGENT_CONFIG_1
+	WRONG_AGENT_CONFIG_2
+	WRONG_AGENT_CONFIG_3
+	WRONG_AGENT_CONFIG_4
+	WRONG_AGENT_CONFIG_5
+	WRONG_AGENT_CONFIG_6
+	WRONG_AGENT_CONFIG_7
+	WRONG_AGENT_CONFIG_8
+	WRONG_AGENT_CONFIG_9
+	WRONG_AGENT_CONFIG_10
+	WRONG_AGENT_CONFIG_11
+	WRONG_AGENT_CONFIG_12
+	WRONG_AGENT_CONFIG_13
+	WRONG_AGENT_CONFIG_14
+	EMPTY_AGENT_CONFIG
 )
 
 type metricsEntry struct {
@@ -86,33 +83,30 @@ var metricsConfigsTestTable = map[int]metricsEntry{
 	WRONG_METRIC_CONFIG_4:   newMetricsConfig(json.Marshal(getWrongConfig4())),
 	WRONG_METRIC_CONFIG_5:   newMetricsConfig(json.Marshal(getWrongConfig5())),
 	WRONG_METRIC_CONFIG_6:   newMetricsConfig(json.Marshal(getWrongConfig6())),
-	WRONG_METRIC_CONFIG_7:   newMetricsConfig(json.Marshal(getWrongConfig7())),
-	WRONG_METRIC_CONFIG_8:   newMetricsConfig(json.Marshal(getWrongConfig8())),
-	WRONG_METRIC_CONFIG_9:   newMetricsConfig(json.Marshal(getWrongConfig9())),
 	SETFILE_NOT_FOUND:       newMetricsConfig(nil, errors.New("Setfile not found")),
 	EMPTY_SETFILE:           newMetricsConfig(nil, nil),
 	WRONG_SETFILE:           newMetricsConfig(json.Marshal(map[string]int{"Foo": 1, "Bar": 2})),
 }
 
-var hostConfigsTestTable = map[int]map[string]interface{}{
-	CORRECT_HOST_CONFIG_1: getCorrectHostConfig1(),
-	CORRECT_HOST_CONFIG_2: getCorrectHostConfig2(),
-	CORRECT_HOST_CONFIG_3: getCorrectHostConfig3(),
-	WRONG_HOST_CONFIG_1:   getWrongHostConfig1(),
-	WRONG_HOST_CONFIG_2:   getWrongHostConfig2(),
-	WRONG_HOST_CONFIG_3:   getWrongHostConfig3(),
-	WRONG_HOST_CONFIG_4:   getWrongHostConfig4(),
-	WRONG_HOST_CONFIG_5:   getWrongHostConfig5(),
-	WRONG_HOST_CONFIG_6:   getWrongHostConfig6(),
-	WRONG_HOST_CONFIG_7:   getWrongHostConfig7(),
-	WRONG_HOST_CONFIG_8:   getWrongHostConfig8(),
-	WRONG_HOST_CONFIG_9:   getWrongHostConfig9(),
-	WRONG_HOST_CONFIG_10:  getWrongHostConfig10(),
-	WRONG_HOST_CONFIG_11:  getWrongHostConfig11(),
-	WRONG_HOST_CONFIG_12:  getWrongHostConfig12(),
-	WRONG_HOST_CONFIG_13:  getWrongHostConfig13(),
-	WRONG_HOST_CONFIG_14:  getWrongHostConfig14(),
-	EMPTY_HOST_CONFIG:     getWrongHostConfig16(),
+var agentConfigsTestTable = map[int]map[string]interface{}{
+	CORRECT_AGENT_CONFIG_1: getCorrectAgentConfig1(),
+	CORRECT_AGENT_CONFIG_2: getCorrectAgentConfig2(),
+	CORRECT_AGENT_CONFIG_3: getCorrectAgentConfig3(),
+	WRONG_AGENT_CONFIG_1:   getWrongAgentConfig1(),
+	WRONG_AGENT_CONFIG_2:   getWrongAgentConfig2(),
+	WRONG_AGENT_CONFIG_3:   getWrongAgentConfig3(),
+	WRONG_AGENT_CONFIG_4:   getWrongAgentConfig4(),
+	WRONG_AGENT_CONFIG_5:   getWrongAgentConfig5(),
+	WRONG_AGENT_CONFIG_6:   getWrongAgentConfig6(),
+	WRONG_AGENT_CONFIG_7:   getWrongAgentConfig7(),
+	WRONG_AGENT_CONFIG_8:   getWrongAgentConfig8(),
+	WRONG_AGENT_CONFIG_9:   getWrongAgentConfig9(),
+	WRONG_AGENT_CONFIG_10:  getWrongAgentConfig10(),
+	WRONG_AGENT_CONFIG_11:  getWrongAgentConfig11(),
+	WRONG_AGENT_CONFIG_12:  getWrongAgentConfig12(),
+	WRONG_AGENT_CONFIG_13:  getWrongAgentConfig13(),
+	WRONG_AGENT_CONFIG_14:  getWrongAgentConfig14(),
+	EMPTY_AGENT_CONFIG:     getWrongAgentConfig16(),
 }
 
 type mockReader struct {
@@ -186,24 +180,6 @@ func TestGetMetricsConfig(t *testing.T) {
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_METRIC_CONFIG_7", func() {
-			cfgReader = &mockReader{metricsConfigsTestTable[WRONG_METRIC_CONFIG_7]}
-			_, serr := GetMetricsConfig("setfile.json")
-			So(serr, ShouldNotBeNil)
-		})
-
-		Convey("Testing WRONG_METRIC_CONFIG_8", func() {
-			cfgReader = &mockReader{metricsConfigsTestTable[WRONG_METRIC_CONFIG_8]}
-			_, serr := GetMetricsConfig("setfile.json")
-			So(serr, ShouldNotBeNil)
-		})
-
-		Convey("Testing WRONG_METRIC_CONFIG_9", func() {
-			cfgReader = &mockReader{metricsConfigsTestTable[WRONG_METRIC_CONFIG_9]}
-			_, serr := GetMetricsConfig("setfile.json")
-			So(serr, ShouldNotBeNil)
-		})
-
 		Convey("Testing SETFILE_NOT_FOUND", func() {
 			cfgReader = &mockReader{metricsConfigsTestTable[SETFILE_NOT_FOUND]}
 			_, serr := GetMetricsConfig("setfile.json")
@@ -224,96 +200,96 @@ func TestGetMetricsConfig(t *testing.T) {
 	})
 }
 
-func TestGetHostConfig(t *testing.T) {
-	Convey("Testing GetHostConfig", t, func() {
+func TestGetAgentConfig(t *testing.T) {
+	Convey("Testing GetAgentConfig", t, func() {
 
-		Convey("Testing CORRECT_HOST_CONFIG_1", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[CORRECT_HOST_CONFIG_1])
+		Convey("Testing CORRECT_AGENT_CONFIG_1", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[CORRECT_AGENT_CONFIG_1])
 			So(serr, ShouldBeNil)
 		})
 
-		Convey("Testing CORRECT_HOST_CONFIG_2", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[CORRECT_HOST_CONFIG_2])
+		Convey("Testing CORRECT_AGENT_CONFIG_2", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[CORRECT_AGENT_CONFIG_2])
 			So(serr, ShouldBeNil)
 		})
 
-		Convey("Testing CORRECT_HOST_CONFIG_3", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[CORRECT_HOST_CONFIG_3])
+		Convey("Testing CORRECT_AGENT_CONFIG_3", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[CORRECT_AGENT_CONFIG_3])
 			So(serr, ShouldBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_1", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_1])
+		Convey("Testing WRONG_AGENT_CONFIG_1", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_1])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_2", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_2])
+		Convey("Testing WRONG_AGENT_CONFIG_2", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_2])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_3", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_3])
+		Convey("Testing WRONG_AGENT_CONFIG_3", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_3])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_4", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_4])
+		Convey("Testing WRONG_AGENT_CONFIG_4", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_4])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_5", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_5])
+		Convey("Testing WRONG_AGENT_CONFIG_5", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_5])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_6", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_6])
+		Convey("Testing WRONG_AGENT_CONFIG_6", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_6])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_7", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_7])
+		Convey("Testing WRONG_AGENT_CONFIG_7", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_7])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_8", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_8])
+		Convey("Testing WRONG_AGENT_CONFIG_8", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_8])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_9", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_9])
+		Convey("Testing WRONG_AGENT_CONFIG_9", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_9])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_10", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_10])
+		Convey("Testing WRONG_AGENT_CONFIG_10", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_10])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_11", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_11])
+		Convey("Testing WRONG_AGENT_CONFIG_11", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_11])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_12", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_12])
+		Convey("Testing WRONG_AGENT_CONFIG_12", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_12])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_13", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_13])
+		Convey("Testing WRONG_AGENT_CONFIG_13", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_13])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing WRONG_HOST_CONFIG_14", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[WRONG_HOST_CONFIG_14])
+		Convey("Testing WRONG_AGENT_CONFIG_14", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[WRONG_AGENT_CONFIG_14])
 			So(serr, ShouldNotBeNil)
 		})
 
-		Convey("Testing EMPTY_HOST_CONFIG", func() {
-			_, serr := GetHostConfig(hostConfigsTestTable[EMPTY_HOST_CONFIG])
+		Convey("Testing EMPTY_AGENT_CONFIG", func() {
+			_, serr := GetSnmpAgentConfig(agentConfigsTestTable[EMPTY_AGENT_CONFIG])
 			So(serr, ShouldNotBeNil)
 		})
 
