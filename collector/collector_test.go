@@ -205,7 +205,7 @@ func TestCollectMetrics(t *testing.T) {
 			config := cdata.NewNode()
 			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
 			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
-			config.AddItem("snmp_host_address", ctypes.ConfigValueStr{Value: "127.0.0.1"})
+			config.AddItem("snmp_agent_address", ctypes.ConfigValueStr{Value: "127.0.0.1"})
 			config.AddItem("community", ctypes.ConfigValueStr{Value: "public"})
 			mts := mockMts
 			for i := range mts {
@@ -238,43 +238,74 @@ var (
 
 	mockFilePath = "./temp_setfile.json"
 
-	mockFileCont = []byte(`{
-	    "__metric1__": {
-	      "OID": ".1.3.6.1.2.1.1.9.1.3.1"
-	    },
-	  "__metric2__": {
-	      "OID": ".1.3.6.1.2.1.1.9.1.3",
-	      "mode": "multiple",
-	      "prefix": {
-	        "source": "snmp",
-	        "OID": ".1.3.6.1.2.1.1.9.1.3"
-	      },
-	      "suffix": {
-	        "source": "snmp",
-	        "OID": ".1.3.6.1.2.1.1.9.1.3"
-	      },
-	      "scale": 1.25,
-	      "shift": 2,
-	      "unit": "",
-	      "description": "description"
-	    },
-	  "__metric3__": {
-	      "OID": ".1.3.6.1.2.1.1.9.1.3",
-	      "mode": "multiple",
-	      "prefix": {
-	        "source": "string",
-	        "string": "prefix"
-	      },
-	      "suffix": {
-	        "source": "string",
-	        "string": "suffix"
-	      },
-	      "scale": 1.25,
-	      "shift": 2,
-	      "unit": "",
-	      "description": "description"
-	    }
-	}
+	mockFileCont = []byte(`
+	 [
+ {
+    "mode": "single",
+    "namespace": [
+      {"source": "string", "string": "load"},
+      {"source": "string", "string": "loadavg1"}
+    ],
+    "OID": ".1.3.6.1.4.1.2021.10.1.5.1",
+    "scale": 0.01,
+    "shift": 0,
+    "unit": "unit",
+    "description": "description"
+  },
+  {
+    "mode": "single",
+    "namespace": [
+      {"source": "string", "string": "load2"},
+      {"source": "string", "string": "loadavg1"},
+      {"source": "snmp", "name": "test", "OID": ".1.3.6.1.4.1.2021.10.1.5.1"},
+      {"source": "index", "oid_part": "11" , "name": "name"},
+      {"source": "string", "string": "value"}
+    ],
+    "OID": ".1.3.6.1.4.1.2021.10.1.5.1",
+    "scale": 0.01,
+    "shift": 0,
+    "unit": "unit",
+    "description": "description"
+  },
+  {
+    "namespace": [
+      {"source": "string", "string": "load3"},
+      {"source": "string", "string": "loadavg1"},
+      {"source": "snmp", "name": "test", "OID": ".1.3.6.1.4.1.2021.10.1.5.1"},
+      {"source": "index", "oid_part": "11", "name": "name"},
+      {"source": "string", "string": "value"}
+    ],
+    "OID": ".1.3.6.1.4.1.2021.10.1.5.1"
+  },
+   {
+    "mode": "walk",
+    "namespace": [
+      {"source": "string", "string": "load2"},
+      {"source": "string", "string": "laEntry"},
+      {"source": "index", "oid_part": "9", "name": "name"},
+      {"source": "string", "string": "value"}
+    ],
+    "OID": "1.3.6.1.4.1.2021.10.1",
+    "scale": 0.01,
+    "shift": 0,
+    "unit": "unit",
+    "description": "description"
+  },
+   {
+  "mode": "table",
+  "namespace": [
+    {"source": "string", "string": "net"},
+    {"source": "string", "string": "if"},
+    {"source": "snmp", "name": "interface", "OID": ".1.3.6.1.2.1.2.2.1.2"},
+    {"source": "string", "string": "in_octets"}
+  ],
+  "OID": ".1.3.6.1.2.1.2.2.1.10",
+  "scale": 1.0,
+  "shift": 0,
+  "unit": "unit",
+  "description": "description"
+   }
+  ]
 	`)
 
 	mockFileContEmpty = []byte(``)

@@ -11,8 +11,8 @@
            },
             "config": {
 				"/intel/snamp": {
-                    "snmp_host_name": "snmp_host",
-                    "snmp_host_address": "127.0.0.1",
+                    "snmp_agent_name": "snmp_agent",
+                    "snmp_agent_address": "127.0.0.1",
 					"user_name": "name",
 					"security_level ": "authPriv",
 					"auth_protocol": "MD5",

@@ -13,6 +13,9 @@ The plugin is a generic plugin. You need to configure metrics.
   * [Collected Metrics](#collected-metrics)
   * [snap's Global Config](#snaps-global-config)
   * [Setfile structure](#setfile-structure)
+  * [Namespace](#namespace)
+  * [Metric modes](#modes)
+  * [SNMP agent configuration](#snmp-agent-configuration)
   * [Task manifest](#task-manifest)
   * [Examples](#examples)
   * [Roadmap](#roadmap)
@@ -59,7 +62,7 @@ This builds the plugin in `/build/rootfs`.
 
 * Create Global Config, see description in [snap's Global Config] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#snaps-global-config).
 
-* Create task manifest with SNMP host configuration, SNMP host configuration is described in [task manifest section](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#task-manifest) and see exemplary in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/).
+* Create task manifest with SNMP agent configuration, SNMP agent configuration is described in [this](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#snmp-agent-configuration) section and see exemplary task manifest in [task manifest](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#task-manifest) section or in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/).
  
 Notice that this plugin is a generic plugin, it cannot work without configuration, because there is no reasonable default behavior.
 
@@ -68,12 +71,13 @@ Notice that this plugin is a generic plugin, it cannot work without configuratio
 ### Collected Metrics
 The plugin collects metrics using SNMP.
 
-Metrics are available in namespace: `/intel/snmp/<metric_name>/value`, for each of metrics following tags are added:
-- OID - object identifier which is used to read metric,                                                                 
-- SNMP_HOST_NAME - name given by the user for SNMP host in configuration of host,
-- SNMP_HOST_ADDRESS - IP address or host name with port number of SNMP host.
+Metrics are available in namespaces which are configurable by the user. Namespaces start with `/intel/snmp/`,  further parts of namespaces need to be configured, details are described in sections: [setfile structure](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#setfile-structure) and  [namespace](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#namespace).
+For each of metrics following tags are added:
+- OID - object identifier which is used to read metric,
+- SNMP_AGENT_NAME - name given by the user for SNMP agent in configuration of SNMP agent,
+- SNMP_AGENT_ADDRESS - IP address or host name with port number of SNMP agent.
 
-Metrics names are defined in setfile.
+Metrics names are defined in *setfile*.
 Metrics can be collected in one of following data types: int32, uint32, uint64, string. Detailed descriptions of data types are available in the table below:
 
 SNMP data type | SNMP plugin data type | Description
@@ -90,7 +94,7 @@ SNMP data type | SNMP plugin data type | Description
  UInteger32  | uint32 | Unsigned 32bit Integer (values between 0 and 4294967295)
 
 ### snap's Global Config
-Global configuration files are described in [snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPD_CONFIGURATION.md). You have to add section "snmp" in "collector" section and then specify `"setfile"` - path to snmp plugin configuration file (path to setfile),
+Global configuration files are described in [snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPD_CONFIGURATION.md). You have to add section `snmp` in `collector` section and then specify *setfile* - path to SNMP plugin configuration file (path to *setfile*),
 see example Global Config in [examples/cfg/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/).
 
 ### Setfile structure
@@ -98,72 +102,171 @@ see example Global Config in [examples/cfg/] (https://github.com/intelsdi-x/snap
 Setfile contains JSON structure which is used to define metrics. 
 Metric is defined as JSON object in following format:
 ```
-	"<metric_name>": {
+    {
+        "namespace": {
+            {"source": "string", "string": "<string>"},
+            {"source": "snmp", "OID": "<object_identifier>", "name": "<name>"},
+            {"source": "index", "oid_part": "<oid_part_number>", "name": "name"},
+        }
       "OID": "<object_identifier>",
       "mode": "<metric_mode>",
-      "prefix": {
-        "source": "<prefix_source>",
-        "string": "<prefix>"
-      },
-      "suffix": {
-        "source": "<suffix_source>",
-        "string": "<OID_to_get_suffix>"
-      },
       "scale": <scale_value>,
       "shift": <shift_value>,
       "unit": "<unit>",
       "description": "<description>"
     }
 ```
-
 Detailed descriptions of all parameters in metric definition are available in the table below:
 
 Parameter | Type | Possible options | Required | Description
 ----------------|:-------------------------|:-----------------------|:-----------------------|:-----------------------
- \<metric\_name\>  | string |  - | yes | Key in metrics' map.
+ namespace |  array  | - | yes | Array of configuration for namespace elements
+ namespace::source | string | string/snmp/index |  yes | Source of namespace element, namespace elements can be defined as string value (*string*), can be received using SNMP request (*snmp*), or can be defined as a number from OID (*index*), see [namespace section](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#namespace)
+ namespace::string | string | - | yes, for source set to *string* | Namespace element defined by the user as a string value
+ namespace::OID | string | - | yes, for source set to *snmp* | Numeric OID which is used to receive namespace element
+  namespace::oid_part | string | - | yes, for source set to *index* | Index of OID part which is used in namespace.
+  namespace::name | string | - | yes, for source set to *index* or *snmp* | Name of dynamic metric
  OID  | string | - | yes | Object identifier
- mode | string | single/multiple | no | Mode of metric, it is possible to read a single metric or read metrics (all elements) from the specific node of MIB (ang. Management Information Base)
+ mode | string | single/multiple | no | Mode of metric, it is possible to read a single metric or read metrics from the specific node of MIB (ang. Management Information Base), see [metric modes section](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#modes), on default *single* is set
  unit |  string | - | no | Metric unit
  description | string | - | no | Metric description
- prefix | object | - | no | Prefix for metric name, used in namespace
- prefix::source | string | string/snmp| no | Source of prefix, prefixcan be received either using SNMP request or it can be defined by user as string value
- prefix::string | string | - | no | Prefix for metric name provided by user
- prefix::OID | string | - | no | Numeric OID which should be used to receive prefix for metric name
- suffix | object | - | no | Suffix for metric name, used in namespace
- suffix::source | string | string/snmp| - | Source of suffix, suffix can be received either using SNMP request or it can be defined by user as string value
- suffix::string | string | - | no | Suffix for metric name provided by user
- suffix::OID | string | - | no | Numeric OID which should be used to receive suffix for metric name
  shift | float64 | - | no | Shift value can be added to numeric metric
  scale | float64 | - | no | Numeric metric can be multiplied by scale value
 
 
-Exemplary metric definition:
+Exemplary metrics definitions (for more examples see [examples/setfiles/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/setfiles/)):
 ```
-  "__metric2__": {
-      "OID": ".1.3.6.1.2.1.1.9.1.3",
-      "mode": "multiple",
-      "prefix": {
-        "source": "snmp",
-        "OID": ".1.3.6.1.2.1.1.9.1.3"
-      },
-      "suffix": {
-        "source": "snmp",
-        "OID": ".1.3.6.1.2.1.1.9.1.3"
-      },
-      "scale": 1.25,
-      "shift": 2,
-      "unit": "unit",
-      "description": "description"
-    }
+[
+  {
+  "mode": "single",
+  "namespace": [
+    {"source": "string", "string": "net-single"},
+    {"source": "string", "string": "if-single"},
+    {"source": "snmp", "name": "interface", "OID": ".1.3.6.1.2.1.2.2.1.2.1"},
+    {"source": "index", "name": "id", "oid_part": "10"},
+    {"source": "string", "string": "in_octets"}
+  ],
+  "OID": ".1.3.6.1.2.1.2.2.1.10.1",
+  "scale": 1.0,
+  "shift": 0,
+  "unit": "unit",
+  "description": "description"
+  },
+ {
+  "mode": "table",
+  "namespace": [
+    {"source": "string", "string": "net-table"},
+    {"source": "string", "string": "if-table"},
+    {"source": "snmp", "name": "interface", "OID": ".1.3.6.1.2.1.2.2.1.2"},
+    {"source": "index", "name": "id", "oid_part": "10"},
+    {"source": "string", "string": "in_octets"}
+  ],
+  "OID": ".1.3.6.1.2.1.2.2.1.10",
+  "scale": 1.0,
+  "shift": 0,
+  "unit": "unit",
+  "description": "description"
+ },
+ {
+  "mode": "walk",
+  "namespace": [
+    {"source": "string", "string": "net-walk"},
+    {"source": "string", "string": "if-walk"},
+    {"source": "index", "name": "index9", "oid_part": "9"},
+    {"source": "index", "name": "index10", "oid_part": "10"},
+    {"source": "string", "string": "value"}
+  ],
+  "OID": ".1.3.6.1.2.1.2.2.1.",
+  "scale": 1.0,
+  "shift": 0,
+  "unit": "unit",
+  "description": "description"
+}
+]
 ```
-### Task manifest
 
-SNMP host configuration is defined in task manifest, in the config section "/intel/snmp" section must be created and set of appropriate SNMP host parameters must be configured. All possible parameters for SNMP host are gathered in the table below:
+### Namespace
+
+Metrics namespaces are configured in *setfile*. Namespaces start with `/intel/snmp/`,  further parts of namespaces need to be configured
+
+Namespace is configured as an array which contains configuration of namespace elements (separted by `/`), for exemplary metrics definition 
+which are shown in [setfile structure section](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#setfile-structure) and this MIB:
+
+```
+.1.3.6.1.2.1.2.1.0 = INTEGER: 2
+.1.3.6.1.2.1.2.2.1.1.1 = INTEGER: 1
+.1.3.6.1.2.1.2.2.1.1.2 = INTEGER: 2
+.1.3.6.1.2.1.2.2.1.2.1 = STRING: lo
+.1.3.6.1.2.1.2.2.1.2.2 = STRING: eth0
+.1.3.6.1.2.1.2.2.1.3.1 = INTEGER: softwareLoopback(24)
+.1.3.6.1.2.1.2.2.1.3.2 = INTEGER: ethernetCsmacd(6)
+.1.3.6.1.2.1.2.2.1.4.1 = INTEGER: 65536
+.1.3.6.1.2.1.2.2.1.4.2 = INTEGER: 9001
+.1.3.6.1.2.1.2.2.1.5.1 = Gauge32: 10000000
+.1.3.6.1.2.1.2.2.1.5.2 = Gauge32: 4294967295
+.1.3.6.1.2.1.2.2.1.6.1 = STRING: 
+.1.3.6.1.2.1.2.2.1.6.2 = STRING: 
+.1.3.6.1.2.1.2.2.1.7.1 = INTEGER: up(1)
+.1.3.6.1.2.1.2.2.1.7.2 = INTEGER: up(1)
+.1.3.6.1.2.1.2.2.1.8.1 = INTEGER: up(1)
+.1.3.6.1.2.1.2.2.1.8.2 = INTEGER: up(1)
+.1.3.6.1.2.1.2.2.1.9.1 = Timeticks: (0) 0:00:00.00
+.1.3.6.1.2.1.2.2.1.9.2 = Timeticks: (0) 0:00:00.00
+.1.3.6.1.2.1.2.2.1.10.1 = Counter32: 2426340104
+.1.3.6.1.2.1.2.2.1.10.2 = Counter32: 2116292856
+```
+
+following namespaces are built:
+- for *single* mode:
+```
+/intel/snmp/net-single/if-single/lo/1/in_octets
+```
+- for *table* mode:
+```
+/intel/snmp/net-table/if-table/lo/1/in_octets
+/intel/snmp/net-table/if-table/eth0/2/in_octets
+```
+- for *walk* mode:
+```
+/intel/snmp/net-walk/if-walk/1/1/value
+/intel/snmp/net-walk/if-walk/1/2/value
+/intel/snmp/net-walk/if-walk/2/1/value
+/intel/snmp/net-walk/if-walk/2/2/value
+/intel/snmp/net-walk/if-walk/3/1/value
+/intel/snmp/net-walk/if-walk/3/2/value
+/intel/snmp/net-walk/if-walk/4/1/value
+/intel/snmp/net-walk/if-walk/4/2/value
+/intel/snmp/net-walk/if-walk/5/1/value
+/intel/snmp/net-walk/if-walk/5/2/value
+/intel/snmp/net-walk/if-walk/6/1/value
+/intel/snmp/net-walk/if-walk/6/2/value
+/intel/snmp/net-walk/if-walk/7/1/value
+/intel/snmp/net-walk/if-walk/7/2/value
+/intel/snmp/net-walk/if-walk/8/1/value
+/intel/snmp/net-walk/if-walk/8/2/value
+/intel/snmp/net-walk/if-walk/9/1/value
+/intel/snmp/net-walk/if-walk/9/2/value
+/intel/snmp/net-walk/if-walk/10/1/value
+/intel/snmp/net-walk/if-walk/10/2/value
+```
+Length of namespace can be different but the last element in array must have *source* option set to *string*.
+
+### Metric modes
+
+It is possible to read metrics using SNMP plugin through three modes:
+
+- *single* - it is mode to read only one metric,
+- *table* - it is mode to read set of metrics from one node,
+- *walk* - it is mode to read set of metrics from multiple nodes, all children nodes are read.
+
+### SNMP agent configuration
+
+SNMP agent configuration is created in task manifest, in the `config` section `/intel/snmp` section must be created and set of appropriate SNMP agent parameters must be configured. All possible parameters for SNMP agent are gathered in the table below:
 
 Parameter | Type | Possible options | Valid for SNMP  versions | Default value | Required | Description
 ----------------|:-------------------------|:-----------------------|:-----------------------|:-----------------------|:-----------------------|:-----------------------
- snmp_host_name | string | - |v1,v2c,v3 | -  | no | SNMP host name give by the user, any string helpful for the user, this parameter is added as tag (SNMP_HOST_NAME) for metrics   
- snmp_host_address | string | - | v1,v2c,v3 | - | yes | IP address or host name with port number. This parameter is added as a tag (SNMP_HOST_ADDRESS) for metrics
+ snmp_agent_name | string | - |v1,v2c,v3 | -  | no | SNMP agent name give by the user, any string helpful for the user, this parameter is added as tag (SNMP_AGENT_NAME) for metrics   
+ snmp_agent_address | string | - | v1,v2c,v3 | - | yes | IP address or host name with port number. This parameter is added as a tag (SNMP_AGENT_ADDRESS) for metrics
  snmp_version | string | v1/v2c/v3 | v1,v2c,v3 | -  | yes | SNMP version
  community | string |  public/private | v1,v2c | - | yes | Community
  user_name | string | - |  v3 |  - | yes | User name
@@ -177,6 +280,8 @@ Parameter | Type | Possible options | Valid for SNMP  versions | Default value |
  context_name | string | - | v3 | - | no | Context name 
  retries | uint | - | v1,v2c,v3 | 1 | no | Number of connection retries 
  timeout | int | -  | v1,v2c,v3 | 5 | no | SNMP request timeout in seconds
+ 
+### Task manifest
 
 Exemplary task manifest (more examples in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/)):
 ```
@@ -193,8 +298,8 @@ Exemplary task manifest (more examples in [examples/tasks/] (https://github.com/
            },
             "config": {
 				"/intel/snmp": {
-                    "snmp_host_name": "snmp_host",
-                    "snmp_host_address": "127.0.0.1",
+                    "snmp_agent_name": "snmp_agent",
+                    "snmp_agent_address": "127.0.0.1",
 					"user_name": "name",
 					"security_level ": "authPriv",
 					"auth_protocol": "MD5",
@@ -217,13 +322,12 @@ Exemplary task manifest (more examples in [examples/tasks/] (https://github.com/
 }
 ```
 
-
 ### Examples
 Example running snap-plugin-collector-snmp plugin and writing data to a file.
 
 Create configuration file (setfile) for snmp plugin, see exemplary in [examples/setfiles/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/setfiles/).
 
-Set path to configuration file as the field `setfile` in Global Config, see exemplary in [examples/configs/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/).
+Set path to configuration file as the field *setfile* in Global Config, see exemplary in [examples/configs/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/).
 
 In one terminal window, open the snap daemon (in this case with logging set to 1,  trust disabled and global configuration saved in config.json ):
 ```

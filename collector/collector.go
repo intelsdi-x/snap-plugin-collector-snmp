@@ -66,7 +66,7 @@ func Meta() *plugin.PluginMeta {
 
 // New creates initialized instance of snmp collector
 func New() *Plugin {
-	return &Plugin{metricConfig: make(configReader.Metrics)}
+	return &Plugin{metricConfig: make(configReader.Metrics, 0)}
 }
 
 // GetMetricTypes returns list of available metric types
@@ -99,7 +99,7 @@ func (p *Plugin) CollectMetrics(metricTypes []plugin.MetricType) ([]plugin.Metri
 
 	config, _ := getConfigItems(metricTypes[0])
 
-	_, serr := configReader.GetHostConfig(config)
+	_, serr := configReader.GetSnmpAgentConfig(config)
 	if serr != nil {
 		return nil, serr
 	}
@@ -126,16 +126,16 @@ func (p *Plugin) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
 	return cp, nil
 }
 
-//getConfigItems reads host parameters from configuration and creates map of host parameters
+//getConfigItems reads agent parameters from configuration and creates map of agent parameters
 func getConfigItems(metricTypes plugin.MetricType) (map[string]interface{}, error) {
 	cfg := make(map[string]interface{})
-	for _, hostParam := range configReader.HostConfigParameters {
-		item, err := config.GetConfigItem(metricTypes, hostParam)
+	for _, snmpAgentParam := range configReader.SnmpAgentConfigParameters {
+		item, err := config.GetConfigItem(metricTypes, snmpAgentParam)
 		if err != nil {
-			serr := serror.New(fmt.Errorf("Missing parameter in configuration (%s)", hostParam))
+			serr := serror.New(fmt.Errorf("Missing parameter in configuration (%s)", snmpAgentParam))
 			log.WithFields(serr.Fields()).Warn(serr.Error())
 		} else {
-			cfg[hostParam] = item
+			cfg[snmpAgentParam] = item
 		}
 	}
 	return cfg, nil
