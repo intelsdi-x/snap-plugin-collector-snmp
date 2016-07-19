@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "30s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/intel/snmp/*": {}
+      },
+      "config": {
+        "/intel/snmp": {
+          "snmp_agent_name": "host1",
+          "snmp_agent_address": "127.0.0.1:1161",
+          "snmp_version": "v2c",
+          "community": "public",
+          "network": "tcp",
+          "timeout": 5,
+          "retries": 5
+        }
+      },
+      "process": null,
+      "publish": null
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "10s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/intel/snmp/*": {}
+      },
+      "config": {
+        "/intel/snmp": {
+          "snmp_agent_name": "host1",
+          "snmp_agent_address": "127.0.0.1:161",
+          "snmp_version": "v3",
+          "network": "udp",
+          "user_name": "user",
+          "security_level": "AuthPriv",
+          "auth_password": "password",
+          "auth_protocol": "MD5",
+          "priv_protocol": "DES",
+          "priv_password": "password",
+          "timeout": 1,
+          "retries": 5
+        }
+      },
+      "process": null,
+      "publish": [
+        {
+          "plugin_name": "file",
+          "config": {
+            "file": "/tmp/published_snmp.txt"
+          }
+        }
+      ]
+    }
+  }
+}
