@@ -1,4 +1,4 @@
-# snap collector plugin - exec
+# snap collector plugin - snmp
 
 1. [Contributing Code](#contributing-code)
 2. [Contributing Examples](#contributing-examples)
