@@ -1,0 +1,21 @@
+:global:
+  maintainer: core
+.travis.yml:
+  env:
+    global:
+      - ORG_PATH=/home/travis/gopath/src/github.com/intelsdi-x
+      - SNAP_PLUGIN_SOURCE=/home/travis/gopath/src/github.com/${TRAVIS_REPO_SLUG}
+    matrix:
+      - TEST_TYPE=small
+      - TEST_TYPE=medium
+  deploy:
+    access_key_id: AKIAINMB43VSSPFZISAA
+    secret_access_key:
+      secure: YyBdd22h/0hl6YtA25GzLsija8Yg8uvF8RjDVwNheqcAEpmroLCq4LMMFo+AubUv+6oGmttLXRPfHk0uP3040Vp44TSTMC/mmRNQl8sxO+h/9UOWTCIFsFFxj0uN6S2oFDutLbqwRlt3pK2kxxGwJwL3PgBqUQ0c4HKNRpqRSSyeCi3+omq9r5C1H+b+XCYPz7kyQHKYRFqAm3441SJV+mInZTQHYz01rMuinN/P/rUEl988w9YxLoaR2keqAY5NVaOh35/Cnih/wVL8wdwcajSv939WblZ6tU/+ZL65d7Zv79zx4JCbeelzCxLBy+ftOaEtsm5F73Q3FGbXNBjmmMC24tDjo6kPVKLQBKRaJ3976LaYYyRw8Y83EytkZ5zntQprB6JtRY2zy0Y5LqUUImGw5A2O403gEZfvuNjROPU38Wd9rwkL0qP1w5dzd8qW2tn4KMARmF04dx8frSc8MXPxrIrEN/NOoH/wBSQFr70iDFrfxpsmjwBZ10HNQUhhLIWRxckpaeFYmxA4cq9OH1XOP/Yvaf9l0HtOouZEdrMOyHTuGr0WiGT7zslosKU0kjSwLStg1K6qyyiIpARNs2mpwNUaReKs8acqIMlPQkJIFfgOPkr819TZ8O6Q4rjsfmglOCWfIIa2UTdSFkwkS2R33vtmdirJWaiK3Pazrus=
+    api_key:
+      secure: SE4c+5pw4lt+aij6uN6CRuTxnDc2wjSOiU18ZJj1TmZxhGEBq02MZivacziA6WlmEOhsG4giaR06/MFtZBr4EJH53mn4nbF+K5f6sdG5VIx8ibt3+Vw7A1stNDYBgupWMO0s7kxUSsQUAjCb+u+udEUz6vLjQkFEaASVA+cFXgP9YS3uevIfNOwJ8ipB7cHAA/48+0nS8UfTm0oXD2DbBNiavUSYQbor9Zylfxj/dRcykVANCy2VfTv9j8b86J7BTlnoTMaNGsaUMCYC+gRxapOhh6fj5Dn6XXFRPPpy/zLiUvW3itW8EsyKUgZFOr76nGQ1ptKbmSvfQIw19uNem45ufg2+2Lbwkt+SMinepn8PaVlYtgrxxFpWEQZAkZVrQbudwUdQDlKVTFKvBMtvYJ9frh0AwDwuLRkvyYdOZwPEA3zb6LOhoaeh76cb/EXtdg4HOhJjUmvvdBJ9vmzzh6kKcvKhY/ihKxoBlXOSDvwXIMUVs66jiPR5nDfY2bWYCL5wnve4o+Uj5YJdyAdC5HCsSAuXURCkVSk2JtLP/mVAQZs0P/pnmyurEUZ55c3M2DVWjNE2ksB/KNMLCt7d9uBczaOkLvuvuMNx1xyigwLcuK4/DZAjxgtLi9oqDfVbPRGuEcxvZp06pe1TZJO51ft2gR1lT0R7pNouIdWXVNQ=
+scripts/deps.sh:
+  packages:
+    - github.com/smartystreets/goconvey # NOTE: this should be moved to godep/glide
+    - github.com/stretchr/testify/mock
+    - github.com/gorilla/mux
