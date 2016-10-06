@@ -16,8 +16,8 @@
     "namespace": [
       {"source": "string", "string": "load2"},
       {"source": "string", "string": "loadavg1"},
-      {"source": "snmp", "name": "test", "OID": ".1.3.6.1.4.1.2021.10.1.5.1"},
-      {"source": "index", "oid_part": 11 , "name": "name"},
+      {"source": "snmp", "name": "load", "description": "cpu load", "OID": ".1.3.6.1.4.1.2021.10.1.5.1"},
+      {"source": "index", "oid_part": 11 , "name": "name", "description": "id"},
       {"source": "string", "string": "value"}
     ],
     "OID": ".1.3.6.1.4.1.2021.10.1.5.1",
@@ -30,8 +30,8 @@
     "namespace": [
       {"source": "string", "string": "load3"},
       {"source": "string", "string": "loadavg1"},
-      {"source": "snmp", "name": "test", "OID": ".1.3.6.1.4.1.2021.10.1.5.1"},
-      {"source": "index", "oid_part": 11, "name": "name"},
+      {"source": "snmp", "name": "load", "description": "cpu load", "OID": ".1.3.6.1.4.1.2021.10.1.5.1"},
+      {"source": "index", "oid_part": 11, "name": "name", "description": "id"},
       {"source": "string", "string": "value"}
     ],
     "OID": ".1.3.6.1.4.1.2021.10.1.5.1"
@@ -41,7 +41,7 @@
     "namespace": [
       {"source": "string", "string": "load2"},
       {"source": "string", "string": "laEntry"},
-      {"source": "index", "oid_part": 9, "name": "name"},
+      {"source": "index", "oid_part": 9, "name": "name", "description": "id"},
       {"source": "string", "string": "value"}
     ],
     "OID": "1.3.6.1.4.1.2021.10.1",
@@ -55,7 +55,7 @@
   "namespace": [
     {"source": "string", "string": "net"},
     {"source": "string", "string": "if"},
-    {"source": "snmp", "name": "interface", "OID": ".1.3.6.1.2.1.2.2.1.2"},
+    {"source": "snmp", "name": "interface", "description": "name of interface", "OID": ".1.3.6.1.2.1.2.2.1.2"},
     {"source": "string", "string": "in_octets"}
   ],
   "OID": ".1.3.6.1.2.1.2.2.1.10",
@@ -64,4 +64,4 @@
   "unit": "unit",
   "description": "description"
    }
-  ]
+]
