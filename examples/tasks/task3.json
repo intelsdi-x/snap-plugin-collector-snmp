@@ -25,7 +25,6 @@
           "retries": 5
         }
       },
-      "process": null,
       "publish": [
         {
           "plugin_name": "file",
