@@ -25,7 +25,7 @@ This plugin collects metrics using SNMP (Simple Network Management Protocol). Th
 ## Getting Started
 
 ### System Requirements
-* [golang 1.5+](https://golang.org/dl/) - needed only for building
+* [golang 1.6+](https://golang.org/dl/) - needed only for building
 * access to SNMP agent which supports SNMP in one of the following versions: v1, v2c, v3
 
 ### Operating systems
@@ -36,7 +36,7 @@ All OSs currently supported by snap:
 
 #### Download snmp plugin binary:
 
-You can get the pre-built binaries for your OS and architecture at Snap's [Github Releases](https://github.com/intelsdi-x/snap/releases) page.
+You can get the pre-built binaries for your OS and architecture at plugin's [Github Releases](https://github.com/intelsdi-x/snap-plugin-collector-snmp/releases) page.
 
 #### To build the plugin binary:
 
@@ -50,7 +50,7 @@ Build the plugin by running `make` in the repo:
 ```
 $ make
 ```
-This builds the plugin in `/build/rootfs`.
+This builds the plugin in `./build`.
 
 ### Configuration and Usage
 
@@ -58,9 +58,9 @@ This builds the plugin in `/build/rootfs`.
 
 * Create configuration file (called a *Setfile*) in which metrics are defined. *Setfile* structure description is available in [the setfile structure section](#setfile-structure) and there are examples in [examples/setfiles/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/setfiles/).
 
-* Create Global Config, see description in [Snap's Global Config] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#snaps-global-config).
+* Create Global Config, see description in [Snap's Global Config](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/README.md#snaps-global-config).
 
-* Create a Task Manifest with SNMP agent configuration (described in [this](#snmp-agent-configuration)). There are examples in the [Task Manifest](#task-manifest) section or in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/).
+* Create a [Task Manifest](https://github.com/intelsdi-x/snap/blob/master/docs/TASKS.md) with SNMP agent configuration (described in [this](#snmp-agent-configuration)). There are examples in the [Task Manifest](#task-manifest) section or in [examples/tasks/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/).
  
 Notice that this plugin is a generic plugin, it cannot work without configuration, because there is no reasonable default behavior.
 
@@ -86,7 +86,7 @@ SNMP data type | SNMP plugin data type | Description
  Gauge32  | uint32 | Represents an unsigned integer, which may increase or decrease, but shall never exceed a maximum value
  Integer | int32 | Signed 32bit Integer (values between -2147483648 and 2147483647)
  Integer32 | int32 | Same as Integer
- IpAddress | string | IP address  
+ IpAddress | string | IP address
  Object Identifier | string | An OID
  Octet String | string | Arbitrary binary or textual data, typically limited to 255 characters in length
  TimeTicks | uint32 | Represents an unsigned integer which represents the time, modulo 232 (4294967296 dec), in hundredths of a second between two epochs
@@ -97,12 +97,14 @@ SNMP data type | SNMP plugin data type | Description
 
 It is possible to modify metric value using `scale` or `shift` parameters, for more information read [setfile structure](#setfile-structure) section.
 
-The metric value is modified using the following equation: `new_metric_value = numeric_metric_value * scale + shift`.
+The metric value is modified using the following equation:
+
+`new_metric_value = numeric_metric_value * scale + shift`.
 
 If `scale` or `shift` parameters are set (`scale` different than 1, `shift` different than 0) then numeric metrics are returned as float64.
 
 ### snap's Global Config
-Global configuration files are described in [Snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPD_CONFIGURATION.md) and require the `snmp` section in `collector` along with the specific *Setfile* - path to SNMP plugin configuration file (path to *Setfile*). Examples of valid Global Config files are in [examples/cfg/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/).
+Global configuration files are described in [Snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPTELD_CONFIGURATION.md) and require the `snmp` section in `collector` along with the specific *Setfile* - path to SNMP plugin configuration file (path to *Setfile*). Examples of valid Global Config files are in [examples/cfg/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/).
 
 ### Setfile structure
 
@@ -271,7 +273,7 @@ SNMP agent configuration is created in Task Manifest, in the `config` section `/
 
 Parameter | Type | Possible options | Valid for SNMP  versions | Default value | Required | Description
 ----------------|:-------------------------|:-----------------------|:-----------------------|:-----------------------|:-----------------------|:-----------------------
- snmp_agent_name | string | - |v1,v2c,v3 | -  | no | SNMP agent name give by the user, any string helpful for the user, this parameter is added as tag (SNMP_AGENT_NAME) for metrics   
+ snmp_agent_name | string | - |v1,v2c,v3 | -  | no | SNMP agent name give by the user, any string helpful for the user, this parameter is added as tag (SNMP_AGENT_NAME) for metrics
  snmp_agent_address | string | - | v1,v2c,v3 | - | yes | IP address or host name with port number. This parameter is added as a tag (SNMP_AGENT_ADDRESS) for metrics
  snmp_version | string | v1/v2c/v3 | v1,v2c,v3 | -  | yes | SNMP version
  community | string | - | v1,v2c | - | yes | Community
@@ -291,7 +293,7 @@ Parameter | Type | Possible options | Valid for SNMP  versions | Default value |
  
 ### Task Manifest
 
-Example Task Manifest (more examples in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/)):
+Example [Task Manifest](https://github.com/intelsdi-x/snap/blob/master/docs/TASKS.md) (more examples in [examples/tasks/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/)):
 ```
 {
   "version": 1,
@@ -315,7 +317,6 @@ Example Task Manifest (more examples in [examples/tasks/] (https://github.com/in
           "retries": 5
         }
       },
-      "process": null,
       "publish": [
         {
           "plugin_name": "file",
@@ -330,44 +331,48 @@ Example Task Manifest (more examples in [examples/tasks/] (https://github.com/in
 ```
 
 ### Examples
-Here's an example of running the snap-plugin-collector-snmp plugin and writing data to a file.
 
-1. Create configuration file (*Setfile*) for SNMP plugin based on the examples in [examples/setfiles/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/setfiles/)
+Here's an example of running the snap-plugin-collector-snmp plugin and writing data to a file using [snap-plugin-publisher-file](https://github.com/intelsdi-x/snap-plugin-publisher-file).
 
-2. Set path to configuration file as a field in the *Setfile* in Global Config based on examples in [examples/configs/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/)
+- Create configuration file (*Setfile*) for SNMP plugin based on the examples in [examples/setfiles/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/setfiles/)
 
-3. In one terminal window, run `snapd` (in this case with logging set to 1, trust disabled and global configuration saved in config.json ):
+- Set path to configuration file as a field in the *Setfile* in Global Config based on examples in [examples/configs/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/)
+
+- Set up the [Snap framework](https://github.com/intelsdi-x/snap/blob/master/README.md#getting-started),
+in one terminal window, run `snapd` (in this case with logging set to 1, trust disabled and global configuration saved in config.json ):
 ```
 $ snapd -l 1 -t 0 --config config.json
 ```
-4. In another terminal window:
 
-Load snap-plugin-collector-snmp plugin: 
+- In another terminal window, download and load Snap plugins:
 ```
+$ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/linux/x86_64/snap-plugin-publisher-file
+$ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-collector-snmp/latest/linux/x86_64/snap-plugin-collector-snmp
+$ snapctl plugin load snap-plugin-publisher-file
 $ snapctl plugin load snap-plugin-collector-snmp
 ```
-Load file plugin for publishing:
-```
-$ snapctl plugin load $SNAP_PATH/plugin/snap-publisher-file
-```
+
 See available metrics for your system:
+
 ```
 $ snapctl metric list
 ```
 
-5. Create a Task Manifest file to use snap-plugin-collector-snmp plugin based on the files in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/))
+- Create a [Task Manifest](https://github.com/intelsdi-x/snap/blob/master/docs/TASKS.md) file to use snap-plugin-collector-snmp plugin based on the files in [examples/tasks/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/))
 
-6. Create a task:
+- Create a task:
 ```
 $ snapctl task create -t task.json
-ID: ef720332-8f0f-4cd7-84f8-73219d403c35
-Name: Task-ef720332-8f0f-4cd7-84f8-73219d403c35
-State: Running
 ```
 
-7. And watch the metrics populate: 
+- And watch the metrics populate:
 ```
-$ snapctl task watch ef720332-8f0f-4cd7-84f8-73219d403c35
+$ snapctl task watch <task_id>
+```
+
+- To stop previously created task:
+```
+$ snapctl task stop <task_id>
 ```
 
 ### Roadmap
