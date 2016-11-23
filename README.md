@@ -339,40 +339,40 @@ Here's an example of running the snap-plugin-collector-snmp plugin and writing d
 - Set path to configuration file as a field in the *Setfile* in Global Config based on examples in [examples/configs/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/)
 
 - Set up the [Snap framework](https://github.com/intelsdi-x/snap/blob/master/README.md#getting-started),
-in one terminal window, run `snapd` (in this case with logging set to 1, trust disabled and global configuration saved in config.json ):
+in one terminal window, run `snapteld` (in this case with logging set to 1, trust disabled and global configuration saved in config.json ):
 ```
-$ snapd -l 1 -t 0 --config config.json
+$ snapteld -l 1 -t 0 --config config.json
 ```
 
 - In another terminal window, download and load Snap plugins:
 ```
 $ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/linux/x86_64/snap-plugin-publisher-file
 $ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-collector-snmp/latest/linux/x86_64/snap-plugin-collector-snmp
-$ snapctl plugin load snap-plugin-publisher-file
-$ snapctl plugin load snap-plugin-collector-snmp
+$ snaptel plugin load snap-plugin-publisher-file
+$ snaptel plugin load snap-plugin-collector-snmp
 ```
 
 See available metrics for your system:
 
 ```
-$ snapctl metric list
+$ snaptel metric list
 ```
 
 - Create a [Task Manifest](https://github.com/intelsdi-x/snap/blob/master/docs/TASKS.md) file to use snap-plugin-collector-snmp plugin based on the files in [examples/tasks/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/tasks/))
 
 - Create a task:
 ```
-$ snapctl task create -t task.json
+$ snaptel task create -t task.json
 ```
 
 - And watch the metrics populate:
 ```
-$ snapctl task watch <task_id>
+$ snaptel task watch <task_id>
 ```
 
 - To stop previously created task:
 ```
-$ snapctl task stop <task_id>
+$ snaptel task stop <task_id>
 ```
 
 ### Roadmap
