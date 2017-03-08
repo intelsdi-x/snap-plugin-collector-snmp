@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "30s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/intel/snmp/interfaces/*/ifAdminStatus" : {},
+        "/intel/snmp/interfaces/*/ifInDiscards": {},
+        "/intel/snmp/interfaces/*/ifInErrors": {},
+        "/intel/snmp/interfaces/*/ifInNUcastPkts": {},
+        "/intel/snmp/interfaces/*/ifInOctets": {},
+        "/intel/snmp/interfaces/*/ifInUcastPkts": {},
+        "/intel/snmp/interfaces/*/ifInUnknownProtos": {},
+        "/intel/snmp/interfaces/*/ifLastChange": {},
+        "/intel/snmp/interfaces/*/ifMtu": {},
+        "/intel/snmp/interfaces/*/ifOperStatus": {},
+        "/intel/snmp/interfaces/*/ifOutDiscards": {},
+        "/intel/snmp/interfaces/*/ifOutErrors": {},
+        "/intel/snmp/interfaces/*/ifOutNUcastPkts": {},
+        "/intel/snmp/interfaces/*/ifOutQLen": {},
+        "/intel/snmp/interfaces/*/ifOutUcastPkts": {},
+        "/intel/snmp/interfaces/*/ifPhysAddress": {},
+        "/intel/snmp/interfaces/*/ifSpecific": {},
+        "/intel/snmp/interfaces/*/ifSpeed": {},
+        "/intel/snmp/interfaces/*/ifType": {}
+      },
+      "config": {
+        "/intel/snmp": {
+          "snmp_agent_name": "snmp_agent",
+          "snmp_agent_address": "127.0.0.1:161",
+          "snmp_version": "v2c",
+          "community": "public",
+          "network": "udp",
+          "timeout": 5,
+          "retries": 5
+        }
+      },
+      "publish": [
+        {
+          "plugin_name": "file",
+          "config": {
+            "file": "/tmp/published_snmp_interfaces.txt"
+          }
+        }
+      ]
+    }
+  }
+}
