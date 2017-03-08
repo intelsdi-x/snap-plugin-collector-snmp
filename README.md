@@ -114,7 +114,7 @@ Setfile contains JSON structure which is used to define metrics. Each metric is 
         "namespace": {
             {"source": "string", "string": "<string>"},
             {"source": "snmp", "OID": "<object_identifier>", "name": "<name>", "description": "<description>"},
-            {"source": "index", "oid_part": "<oid_part_number>", "name": "<name>", "description": "<description>"},
+            {"source": "index", "oid_part": <oid_part_number>, "name": "<name>", "description": "<description>"},
         }
       "OID": "<object_identifier>",
       "mode": "<metric_mode>",
@@ -132,9 +132,9 @@ Parameter | Type | Possible options | Required | Description
  namespace::source | string | string/snmp/index |  yes | Source of namespace element, namespace elements can be defined as string value (*string*), can be received using SNMP request (*snmp*), or can be defined as a number from OID (*index*), see [namespace section](#namespace)
  namespace::string | string | - | yes, for source set to *string* | Namespace element defined by the user as a string value
  namespace::OID | string | - | yes, for source set to *snmp* | Numeric OID which is used to receive namespace element
-  namespace::oid_part | uintRE   | - | yes, for source set to *index* | Index of OID part which is used in namespace.
-  namespace::name | string | - | yes, for source set to *index* or *snmp* | Name of dynamic metric
-  namespace::description | string | - | yes, for source set to *index* or *snmp* | Description of dynamic metric
+ namespace::oid_part | uint | - | yes, for source set to *index* | Index of OID part which is used in namespace. It indicates part of OID which will be used in namespace, counting parts (numbers in OID) of OID from 0
+ namespace::name | string | - | yes, for source set to *index* or *snmp* | Name of dynamic metric
+ namespace::description | string | - | yes, for source set to *index* or *snmp* | Description of dynamic metric
  OID  | string | - | yes | Object identifier
  mode | string | single/table/walk | no | Mode of metric, it is possible to read a single metric or read metrics from the specific node of MIB (ang. Management Information Base), see [metric modes section](#modes), on default *single* is set
  unit |  string | - | no | Metric unit
@@ -152,7 +152,7 @@ Here is an example metric definition (with more available in [examples/setfiles/
     {"source": "string", "string": "net-single"},
     {"source": "string", "string": "if-single"},
     {"source": "snmp", "name": "interface", "description": "interface name", "OID": ".1.3.6.1.2.1.2.2.1.2.1"},
-    {"source": "index", "name": "id", "description": "number from OID", "oid_part": "10"},
+    {"source": "index", "name": "id", "description": "number from OID", "oid_part": 10},
     {"source": "string", "string": "in_octets"}
   ],
   "OID": ".1.3.6.1.2.1.2.2.1.10.1",
@@ -167,7 +167,7 @@ Here is an example metric definition (with more available in [examples/setfiles/
     {"source": "string", "string": "net-table"},
     {"source": "string", "string": "if-table"},
     {"source": "snmp", "name": "interface",  "description": "interface name", "OID": ".1.3.6.1.2.1.2.2.1.2"},
-    {"source": "index", "name": "id", "description": "number from OID", "oid_part": "10"},
+    {"source": "index", "name": "id", "description": "number from OID", "oid_part": 10},
     {"source": "string", "string": "in_octets"}
   ],
   "OID": ".1.3.6.1.2.1.2.2.1.10",
@@ -181,8 +181,8 @@ Here is an example metric definition (with more available in [examples/setfiles/
   "namespace": [
     {"source": "string", "string": "net-walk"},
     {"source": "string", "string": "if-walk"},
-    {"source": "index", "name": "index9", "description": "number from OID", "oid_part": "9"},
-    {"source": "index", "name": "index10", "description": "number from OID", "oid_part": "10"},
+    {"source": "index", "name": "index9", "description": "number from OID", "oid_part": 9},
+    {"source": "index", "name": "index10", "description": "number from OID", "oid_part": 10},
     {"source": "string", "string": "value"}
   ],
   "OID": ".1.3.6.1.2.1.2.2.1.",
@@ -395,5 +395,5 @@ And **thank you!** Your contribution, through code and participation, is incredi
 
 ## Acknowledgements
 
-* Author: [Katarzyna Zabrocka](https://github.com/katarzyna-z)
+* Author: [Katarzyna Kujawa](https://github.com/katarzyna-z)
 
