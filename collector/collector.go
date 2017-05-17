@@ -256,11 +256,13 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 
 					//build namespace for metric
 					namespace := core.NewNamespace(vendor, pluginName)
-					for _, ns := range cfg.Namespace {
+					offset := len(namespace)
+					for j, ns := range cfg.Namespace {
 						if ns.Source == configReader.NsSourceString {
 							namespace = namespace.AddStaticElements(ns.String)
 						} else {
-							namespace = namespace.AddStaticElement(ns.Values[i])
+							namespace = namespace.AddDynamicElement(ns.Name, ns.Description)
+							namespace[j+offset].Value = ns.Values[i]
 						}
 					}
 
