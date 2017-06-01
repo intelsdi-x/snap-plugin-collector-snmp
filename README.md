@@ -104,7 +104,12 @@ The metric value is modified using the following equation:
 If `scale` or `shift` parameters are set (`scale` different than 1, `shift` different than 0) then numeric metrics are returned as float64.
 
 ### snap's Global Config
-Global configuration files are described in [Snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPTELD_CONFIGURATION.md) and require the `snmp` section in `collector` along with the specific *Setfile* - path to SNMP plugin configuration file (path to *Setfile*). Examples of valid Global Config files are in [examples/cfg/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/).
+Global configuration files are described in [Snap's documentation](https://github.com/intelsdi-x/snap/blob/master/docs/SNAPTELD_CONFIGURATION.md) and require the `snmp` section in `collector`
+along with the specific *Setfile* - path to SNMP plugin configuration file (path to *Setfile*).
+Examples of valid Global Config files are in [examples/cfg/](https://github.com/intelsdi-x/snap-plugin-collector-snmp/blob/master/examples/configs/).
+
+It is useful to set higher value of `max_running_plugins` in global configuration because, for SNMP plugin, for each of tasks a one instance of plugin is needed.
+Default value of `max_running_plugins` is 3 so by default only 3 tasks with SNMP plugin can be created.
 
 ### Setfile structure
 
