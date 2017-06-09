@@ -303,6 +303,22 @@ func TestCollectMetrics(t *testing.T) {
 				So(metrics[0].Data().(int64), ShouldEqual, 123)
 			})
 
+			Convey("when metric have dynamic namespace elements", func() {
+				snmp_ = &snmpMock{handlerEntry: snmpHandlerTestTable[SUCCESSFULLY_CREATED_HANDLER],
+					elementEntry: snmpElementTestTable[SNMP_ELEMENT_CORRECT_INTEGER]}
+
+				So(func() { plg.CollectMetrics(mts) }, ShouldNotPanic)
+				metrics, err := plg.CollectMetrics(mts)
+
+				So(err, ShouldBeNil)
+				So(metrics, ShouldNotBeEmpty)
+				isDynamic, dynamics := metrics[0].Namespace().IsDynamic()
+				So(isDynamic, ShouldEqual, true)
+				So(dynamics, ShouldHaveLength, 3)
+				So(dynamics, ShouldContain, 3)
+				So(dynamics, ShouldContain, 4)
+				So(dynamics, ShouldContain, 5)
+			})
 		})
 
 		Convey("when setfile content is incorrect - wrong `oid_part` parametr", func() {
