@@ -1,15 +1,16 @@
 {
-    "control": {
-		"plugins": {
-        "collector": {
-            "snmp": {
-                "all": {
-                    "setfile": "setfile.json"
-                }
-            }
+  "control": {
+    "max_running_plugins": 999,
+    "plugins": {
+      "collector": {
+        "snmp": {
+          "all": {
+            "setfile": "setfile.json"
+          }
+        }
       },
-        "publisher": {},
-        "processor": {}
-		}
+      "publisher": {},
+      "processor": {}
     }
+  }
 }
