@@ -131,7 +131,6 @@ func TestGetMetricTypes(t *testing.T) {
 			So(func() { plg.GetMetricTypes(config) }, ShouldNotPanic)
 			_, err := plg.GetMetricTypes(config)
 			So(err, ShouldNotBeNil)
-
 		})
 
 		Convey("when setfle configuration variable has incorrect type (int instead of string)", func() {
@@ -146,7 +145,6 @@ func TestGetMetricTypes(t *testing.T) {
 			So(func() { plg.GetMetricTypes(config) }, ShouldNotPanic)
 			_, err := plg.GetMetricTypes(config)
 			So(err, ShouldNotBeNil)
-
 		})
 
 		Convey("when setfile is empty", func() {
@@ -243,7 +241,6 @@ func TestCollectMetrics(t *testing.T) {
 			//setfile is read in GetMetricsTypes
 			mts, err := plg.GetMetricTypes(pluginConfig)
 			So(err, ShouldBeNil)
-
 			//create host config
 			config := cdata.NewNode()
 			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
@@ -314,10 +311,8 @@ func TestCollectMetrics(t *testing.T) {
 				So(metrics, ShouldNotBeEmpty)
 				isDynamic, dynamics := metrics[0].Namespace().IsDynamic()
 				So(isDynamic, ShouldEqual, true)
-				So(dynamics, ShouldHaveLength, 3)
-				So(dynamics, ShouldContain, 3)
-				So(dynamics, ShouldContain, 4)
-				So(dynamics, ShouldContain, 5)
+				So(dynamics, ShouldHaveLength, 1)
+				So(dynamics, ShouldContain, 6)
 			})
 		})
 
@@ -488,7 +483,6 @@ func TestCollectMetrics(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(mts, ShouldBeEmpty)
 		})
-
 	})
 }
 
@@ -515,7 +509,6 @@ func TestConvertSnmpDataToMetric(t *testing.T) {
 			_, serr := convertSnmpDataToMetric("12.3", "Integer64")
 			So(serr, ShouldBeNil)
 		})
-
 	})
 }
 
@@ -555,13 +548,13 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 
 			varBind := snmpgo.NewVarBind(newOid, snmpgo.NewCounter32(123))
 			varBinds := []*snmpgo.VarBind{varBind}
+			varMap, err := snmpResults2Map(varBinds, metricConfig[0].Oid)
 
 			handler, err := snmp_.newHandler(snmpAgentConfig)
 			So(err, ShouldBeNil)
 
-			serr := getDynamicNamespaceElements(handler, varBinds, &metricConfig[0])
+			serr := getDynamicNamespaceElements(handler, varMap, &metricConfig[0])
 			So(serr, ShouldNotBeNil)
-
 		})
 
 		Convey("with incorrect configuration of dynamic elements of namespace, the number of results is not equal the number of dynamic elements of namespace ", func() {
@@ -576,7 +569,8 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 				Namespace: []configReader.Namespace{
 					configReader.Namespace{Source: "string", String: "test1"},
 					configReader.Namespace{Source: "string", String: "test2"},
-					configReader.Namespace{Source: "snmp", Oid: ".1.3.6.1.2.1.1.9.1.3", Name: "name"},
+					configReader.Namespace{Source: "snmp", Oid: ".1.3.6.1.2.1.1.9.1.3", Name: "name1"},
+					configReader.Namespace{Source: "snmp", Oid: ".1.3.6.1.2.1.1.9.1.7", Name: "name2"},
 					configReader.Namespace{Source: "string", String: "value"},
 				},
 				Unit:        "unit",
@@ -589,13 +583,13 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 
 			varBind := snmpgo.NewVarBind(newOid, snmpgo.NewCounter32(123))
 			varBinds := []*snmpgo.VarBind{varBind, varBind}
+			varMap, err := snmpResults2Map(varBinds, metricConfig[0].Oid)
 
 			handler, err := snmp_.newHandler(snmpAgentConfig)
 			So(err, ShouldBeNil)
 
-			serr := getDynamicNamespaceElements(handler, varBinds, &metricConfig[0])
+			serr := getDynamicNamespaceElements(handler, varMap, &metricConfig[0])
 			So(serr, ShouldNotBeNil)
-
 		})
 
 		Convey("when SNMP request fails", func() {
@@ -622,11 +616,12 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 
 			varBind := snmpgo.NewVarBind(newOid, snmpgo.NewCounter32(123))
 			varBinds := []*snmpgo.VarBind{varBind}
+			varMap, err := snmpResults2Map(varBinds, metricConfig[0].Oid)
 
 			handler, err := snmp_.newHandler(snmpAgentConfig)
 			So(err, ShouldBeNil)
 
-			serr := getDynamicNamespaceElements(handler, varBinds, &metricConfig[0])
+			serr := getDynamicNamespaceElements(handler, varMap, &metricConfig[0])
 			So(serr, ShouldNotBeNil)
 		})
 
@@ -656,11 +651,12 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 
 			varBind := snmpgo.NewVarBind(newOid, snmpgo.NewCounter32(123))
 			varBinds := []*snmpgo.VarBind{varBind}
+			varMap, err := snmpResults2Map(varBinds, metricConfig[0].Oid)
 
 			handler, err := snmp_.newHandler(snmpAgentConfig)
 			So(err, ShouldBeNil)
 
-			serr := getDynamicNamespaceElements(handler, varBinds, &metricConfig[0])
+			serr := getDynamicNamespaceElements(handler, varMap, &metricConfig[0])
 			So(serr, ShouldBeNil)
 		})
 	})
@@ -713,7 +709,6 @@ func TestGetMetricsToCollect(t *testing.T) {
 
 			So(serr, ShouldNotBeNil)
 			So(len(collectedMetrics), ShouldEqual, 0)
-
 		})
 	})
 }
@@ -763,7 +758,7 @@ var (
 			{"source": "snmp", "name": "snmp part", "description": "part received through SNMP request", "OID": ".1.3.6.1.2.1.1.9.1.3"},
 			{"source": "string", "string": "value"}
 		  ],
-		  "OID": ".1.3.6.1.2.1.1.9.1.4",
+		  "OID": ".1.3.6.1.2.1.1.9.1.3",
 		  "scale": 1.0,
 		  "shift": 0,
 		  "unit": "unit",
@@ -810,17 +805,6 @@ var (
 			"description": "Numeric metric"
 		  },
 		  {
-			"mode": "single",
-			"namespace": [
-			  {"source": "string", "string": "sysServicesModified"}
-			],
-			"OID": ".1.3.6.1.2.1.1.7.0",
-			"scale": 0.5,
-			"shift": 18.5,
-			"unit": "",
-			"description": "Numeric metric to show usage of scale and shift"
-		  },
-		   {
 			"mode": "single",
 			"namespace": [
 			  {"source": "string", "string": "sysServicesModified"}
