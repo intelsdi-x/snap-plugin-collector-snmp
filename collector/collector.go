@@ -291,7 +291,20 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 
 					//adding metric to list of metrics
 					mtxMetrics.Lock()
-					mts = append(mts, mt)
+
+					//filter specific instance
+					nsPattern := strings.Replace(metric.Namespace().String(), "*", ".*", -1)
+					matched, err := regexp.MatchString(nsPattern, mt.Namespace().String())
+					if err != nil {
+						logFields := map[string]interface{}{"namespace": mt.Namespace().String(), "pattern": nsPattern, "match_error": err}
+						serr := serror.New(fmt.Errorf("Cannot parse namespace element for matching"), logFields)
+						log.WithFields(serr.Fields()).Warn(serr.Error())
+						return
+					}
+					if matched {
+						mts = append(mts, mt)
+					}
+
 					mtxMetrics.Unlock()
 				}
 			}(cfg)
@@ -443,11 +456,9 @@ func getAgentConfig(metricTypes plugin.MetricType) map[string]interface{} {
 func getMetricsToCollect(namespace string, metrics map[string]configReader.Metric) (map[string]configReader.Metric, serror.SnapError) {
 	collectedMetrics := make(map[string]configReader.Metric)
 
-	// change `*` into regexp `.*` which matches any characters
-	namespace = strings.Replace(namespace, "*", ".*", -1)
-
-	for ns, _ := range metrics {
-		matched, err := regexp.MatchString(namespace, ns)
+	// Filter out setfile based metrics by given namespace
+	for ns := range metrics {
+		matched, err := regexp.MatchString(strings.Replace(ns, "*", ".*", -1), namespace)
 		if err != nil {
 			return nil, serror.New(err)
 		}
