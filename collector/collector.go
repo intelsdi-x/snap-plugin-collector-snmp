@@ -168,6 +168,7 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 
 	//initialization of plugin structure (only once)
 	if !p.initialized {
+
 		configs, serr := getMetricsConfig(metrics[0])
 		if serr != nil {
 			return nil, fmt.Errorf(serr.Error())
@@ -241,8 +242,15 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 					return
 				}
 
+				resultMap, serr := snmpResults2Map(results, cfg.Oid)
+				if serr != nil {
+					log.WithFields(serr.Fields()).Warn(serr.Error())
+					conn.mtx.Unlock()
+					return
+				}
+
 				//get dynamic elements of namespace parts
-				serr = getDynamicNamespaceElements(conn.handler, results, &cfg)
+				serr = getDynamicNamespaceElements(conn.handler, resultMap, &cfg)
 				if serr != nil {
 					log.WithFields(serr.Fields()).Warn(serr.Error())
 					conn.mtx.Unlock()
@@ -252,7 +260,7 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 				conn.lastUsed = time.Now()
 				conn.mtx.Unlock()
 
-				for i, result := range results {
+				for i, result := range resultMap {
 
 					//build namespace for metric
 					namespace := core.NewNamespace(vendor, pluginName)
@@ -360,10 +368,10 @@ func watchConnections() {
 }
 
 //getDynamicNamespaceElements gets dynamic elements of namespace, either sending SNMP requests or using part of OID
-func getDynamicNamespaceElements(handler *snmpgo.SNMP, results []*snmpgo.VarBind, metric *configReader.Metric) serror.SnapError {
+func getDynamicNamespaceElements(handler *snmpgo.SNMP, resultMap map[int]*snmpgo.VarBind, metric *configReader.Metric) serror.SnapError {
 	for i := 0; i < len(metric.Namespace); i++ {
 		//clear slice with dynamic parts of namespace
-		metric.Namespace[i].Values = []string{}
+		metric.Namespace[i].Values = make(map[int]string)
 
 		switch metric.Namespace[i].Source {
 
@@ -372,16 +380,26 @@ func getDynamicNamespaceElements(handler *snmpgo.SNMP, results []*snmpgo.VarBind
 
 		case configReader.NsSourceSNMP:
 			parts, serr := snmp_.readElements(handler, metric.Namespace[i].Oid, metric.Mode)
+
 			if serr != nil {
 				return serr
 			}
-			for _, part := range parts {
-				metricNamePart := ns.ReplaceNotAllowedCharsInNamespacePart(part.Variable.String())
-				metric.Namespace[i].Values = append(metric.Namespace[i].Values, metricNamePart)
+
+			partsMap, serr := snmpResults2Map(parts, metric.Namespace[i].Oid)
+
+			if serr != nil {
+				return serr
+			}
+
+			for idx, part := range partsMap {
+				if _, ok := resultMap[idx]; ok {
+					metricNamePart := ns.ReplaceNotAllowedCharsInNamespacePart(part.Variable.String())
+					metric.Namespace[i].Values[idx] = metricNamePart
+				}
 			}
 
 		case configReader.NsSourceIndex:
-			for _, r := range results {
+			for _, r := range resultMap {
 				oidParts := strings.Split(strings.Trim(r.Oid.String(), "."), ".")
 
 				if uint(len(oidParts)) <= metric.Namespace[i].OidPart {
@@ -392,16 +410,10 @@ func getDynamicNamespaceElements(handler *snmpgo.SNMP, results []*snmpgo.VarBind
 						"number_of_oid_elements":       len(metric.Namespace[i].Values)}
 					return serror.New(fmt.Errorf("Incorrect value of `oid_part`  in configuration of namespace"), logFields)
 				}
-				metric.Namespace[i].Values = append(metric.Namespace[i].Values, oidParts[metric.Namespace[i].OidPart])
+				idx := oidParts[metric.Namespace[i].OidPart]
+				iidx, _ := strconv.Atoi(idx) //TODO: error handling?
+				metric.Namespace[i].Values[iidx] = idx
 			}
-		}
-
-		if len(metric.Namespace[i].Values) != len(results) {
-			logFields := map[string]interface{}{
-				"namespace_part_configuration": metric.Namespace[i],
-				"number_of_results":            len(results),
-				"number_of_namespace_elements": len(metric.Namespace[i].Values)}
-			return serror.New(fmt.Errorf("Incorrect configuration of dynamic elements of namespace, number of namespace elements is not equal to number of results"), logFields)
 		}
 	}
 	return nil
@@ -511,4 +523,28 @@ func modifyNumericMetric(data interface{}, scale float64, shift float64) interfa
 		modifiedData = data
 	}
 	return modifiedData
+}
+
+func snmpResults2Map(results []*snmpgo.VarBind, oid string) (map[int]*snmpgo.VarBind, serror.SnapError) {
+	index := ""
+	res := make(map[int]*snmpgo.VarBind)
+	oidTrimmed := strings.Trim(oid, ".")
+	oidLen := len(strings.Split(oidTrimmed, "."))
+
+	for _, r := range results {
+		roidTrimmed := strings.Trim(r.Oid.String(), ".")
+		roidLen := len(strings.Split(roidTrimmed, "."))
+		if ((roidLen == oidLen) || (roidLen == oidLen+1)) && strings.HasPrefix(roidTrimmed, oidTrimmed) {
+			if roidLen == oidLen+1 {
+				index = strings.Split(roidTrimmed, ".")[oidLen]
+			} else {
+				index = strings.Split(roidTrimmed, ".")[oidLen-1]
+			}
+			idx, _ := strconv.Atoi(index) //TODO: error handling?
+			res[idx] = r
+		} else {
+			return nil, serror.New(fmt.Errorf("Inconsistent Oid in response"), nil)
+		}
+	}
+	return res, nil
 }

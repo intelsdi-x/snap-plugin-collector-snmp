@@ -157,7 +157,7 @@ type Namespace struct {
 	OidPart     uint   `json:"oid_part"`
 	Oid         string `json:"OID"`
 	Description string `json:"description"`
-	Values      []string
+	Values      map[int]string
 }
 
 type Metric struct {

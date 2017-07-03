@@ -1,4 +1,4 @@
-// +build medium
+// 1+build medium
 
 /*
 http://www.apache.org/licenses/LICENSE-2.0.txt
@@ -243,7 +243,6 @@ func TestCollectMetrics(t *testing.T) {
 			//setfile is read in GetMetricsTypes
 			mts, err := plg.GetMetricTypes(pluginConfig)
 			So(err, ShouldBeNil)
-
 			//create host config
 			config := cdata.NewNode()
 			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
@@ -555,11 +554,12 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 
 			varBind := snmpgo.NewVarBind(newOid, snmpgo.NewCounter32(123))
 			varBinds := []*snmpgo.VarBind{varBind}
+			varMap, err := snmpResults2Map(varBinds, metricConfig[0].Oid)
 
 			handler, err := snmp_.newHandler(snmpAgentConfig)
 			So(err, ShouldBeNil)
 
-			serr := getDynamicNamespaceElements(handler, varBinds, &metricConfig[0])
+			serr := getDynamicNamespaceElements(handler, varMap, &metricConfig[0])
 			So(serr, ShouldNotBeNil)
 
 		})
@@ -585,15 +585,16 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 
 			//create results
 			newOid, err := snmpgo.NewOid(metricConfig[0].Oid)
-			So(err, ShouldBeNil)
+			So(err, ShouldBeNil) //TODO ????
 
 			varBind := snmpgo.NewVarBind(newOid, snmpgo.NewCounter32(123))
 			varBinds := []*snmpgo.VarBind{varBind, varBind}
+			varMap, err := snmpResults2Map(varBinds, metricConfig[0].Oid)
 
 			handler, err := snmp_.newHandler(snmpAgentConfig)
 			So(err, ShouldBeNil)
 
-			serr := getDynamicNamespaceElements(handler, varBinds, &metricConfig[0])
+			serr := getDynamicNamespaceElements(handler, varMap, &metricConfig[0])
 			So(serr, ShouldNotBeNil)
 
 		})
@@ -622,11 +623,12 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 
 			varBind := snmpgo.NewVarBind(newOid, snmpgo.NewCounter32(123))
 			varBinds := []*snmpgo.VarBind{varBind}
+			varMap, err := snmpResults2Map(varBinds, metricConfig[0].Oid)
 
 			handler, err := snmp_.newHandler(snmpAgentConfig)
 			So(err, ShouldBeNil)
 
-			serr := getDynamicNamespaceElements(handler, varBinds, &metricConfig[0])
+			serr := getDynamicNamespaceElements(handler, varMap, &metricConfig[0]) //TODO ????
 			So(serr, ShouldNotBeNil)
 		})
 
@@ -656,11 +658,12 @@ func TestGetDynamicNamespaceElements(t *testing.T) {
 
 			varBind := snmpgo.NewVarBind(newOid, snmpgo.NewCounter32(123))
 			varBinds := []*snmpgo.VarBind{varBind}
+			varMap, err := snmpResults2Map(varBinds, metricConfig[0].Oid)
 
 			handler, err := snmp_.newHandler(snmpAgentConfig)
 			So(err, ShouldBeNil)
 
-			serr := getDynamicNamespaceElements(handler, varBinds, &metricConfig[0])
+			serr := getDynamicNamespaceElements(handler, varMap, &metricConfig[0])
 			So(serr, ShouldBeNil)
 		})
 	})
@@ -763,7 +766,7 @@ var (
 			{"source": "snmp", "name": "snmp part", "description": "part received through SNMP request", "OID": ".1.3.6.1.2.1.1.9.1.3"},
 			{"source": "string", "string": "value"}
 		  ],
-		  "OID": ".1.3.6.1.2.1.1.9.1.4",
+		  "OID": ".1.3.6.1.2.1.1.9.1.3",
 		  "scale": 1.0,
 		  "shift": 0,
 		  "unit": "unit",
@@ -810,17 +813,6 @@ var (
 			"description": "Numeric metric"
 		  },
 		  {
-			"mode": "single",
-			"namespace": [
-			  {"source": "string", "string": "sysServicesModified"}
-			],
-			"OID": ".1.3.6.1.2.1.1.7.0",
-			"scale": 0.5,
-			"shift": 18.5,
-			"unit": "",
-			"description": "Numeric metric to show usage of scale and shift"
-		  },
-		   {
 			"mode": "single",
 			"namespace": [
 			  {"source": "string", "string": "sysServicesModified"}
