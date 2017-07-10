@@ -240,10 +240,6 @@ func TestCollectMetrics(t *testing.T) {
 			pluginConfig := plugin.NewPluginConfigType()
 			pluginConfig.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
 
-			//setfile is read in GetMetricsTypes
-			mts, err := plg.GetMetricTypes(pluginConfig)
-			So(err, ShouldBeNil)
-
 			//create host config
 			config := cdata.NewNode()
 			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
@@ -251,8 +247,25 @@ func TestCollectMetrics(t *testing.T) {
 			config.AddItem("community", ctypes.ConfigValueStr{Value: "public"})
 			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
 
+			//setfile is read in GetMetricsTypes
+			mts, err := plg.GetMetricTypes(pluginConfig)
+			So(err, ShouldBeNil)
+
+			//specific instance metrics
+			mtsSpecific := []plugin.MetricType{
+				plugin.MetricType{
+					Namespace_: core.NewNamespace("intel", "snmp", "hrSystem", "1", "3", "123", "value"),
+				},
+				plugin.MetricType{
+					Namespace_: core.NewNamespace("intel", "snmp", "system", "sysORTable", "sysOREntry", "sysORDescr", "123", "value"),
+				},
+			}
+
 			for i := range mts {
 				mts[i].Config_ = config
+			}
+			for i := range mtsSpecific {
+				mtsSpecific[i].Config_ = config
 			}
 
 			Convey("when received data with OCTET_STRING type", func() {
@@ -318,6 +331,20 @@ func TestCollectMetrics(t *testing.T) {
 				So(dynamics, ShouldContain, 3)
 				So(dynamics, ShouldContain, 4)
 				So(dynamics, ShouldContain, 5)
+			})
+
+			Convey("when metric has specific instance provided", func() {
+				snmp_ = &snmpMock{handlerEntry: snmpHandlerTestTable[SUCCESSFULLY_CREATED_HANDLER],
+					elementEntry: snmpElementTestTable[SNMP_ELEMENT_CORRECT_INTEGER]}
+
+				So(func() { plg.CollectMetrics(mtsSpecific) }, ShouldNotPanic)
+				metrics, err := plg.CollectMetrics(mtsSpecific)
+
+				So(err, ShouldBeNil)
+				So(metrics, ShouldNotBeEmpty)
+				So(len(metrics), ShouldEqual, 2)
+				So(metrics[0].Data().(int64), ShouldEqual, 123)
+				So(metrics[1].Data().(int64), ShouldEqual, 123)
 			})
 		})
 
