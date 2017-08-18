@@ -1,8 +1,17 @@
-hash: 3348fa208cb817a70b824e5f3493ac2855449f1194ecfe3cc6e416e2693489d2
-updated: 2016-12-16T10:28:01.563847059+01:00
+hash: d911a04e0e9a1b978bc47bfe4ab536dd6476872c63870436441cd669fa7a24e4
+updated: 2017-08-17T16:25:48.44518705+02:00
 imports:
+- name: github.com/asaskevich/govalidator
+  version: 15028e809df8c71964e8efa6c11e81d5c0262302
+- name: github.com/geoffgarside/ber
+  version: 854377f11dfb81f04121879829bc53487e377739
+- name: github.com/golang/protobuf
+  version: ab9f9a6dab164b7d1246e0e688b0ab7b94d8553e
+  subpackages:
+  - proto
+  - ptypes/any
 - name: github.com/intelsdi-x/snap
-  version: 8905198aaab5bfb6d50a747477ca401e3a7a33ab
+  version: 1c2b1adbc2756f6874804f5204c0b1e16158ee0e
   subpackages:
   - control/plugin
   - control/plugin/cpolicy
@@ -13,40 +22,89 @@ imports:
   - core/ctypes
   - core/serror
   - pkg/ctree
+  - pkg/fileutils
   - pkg/schedule
   - pkg/stringutils
   - scheduler/wmap
+- name: github.com/intelsdi-x/snap-plugin-lib-go
+  version: 4fa1360e35b2f1ebb5fb14a575cc11ecc199c531
+  subpackages:
+  - v1
+  - v1/plugin
+  - v1/plugin/rpc
 - name: github.com/intelsdi-x/snap-plugin-utilities
-  version: 925bafffac36edcfaf4aff937dcb7d3d5659782d
+  version: 3c37e3965f3fc2f24714779d3bae7ba7032b87a9
   subpackages:
   - config
   - ns
   - str
+- name: github.com/julienschmidt/httprouter
+  version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
 - name: github.com/k-sone/snmpgo
-  version: d227fb7b907b5f3695799a3230971ebd7c414d47
+  version: de09377ff34857b08afdc16ea8c7c2929eb1fc6e
 - name: github.com/mitchellh/mapstructure
-  version: bfdb1a85537d60bc7e954e600c250219ea497417
+  version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/oleiade/reflections
-  version: 632977f98cd34d217c4b57d0840ec188b3d3dcaf
+  version: 0e86b3c98b2ff33e30c85cfe97d9a63d439fe7eb
 - name: github.com/robfig/cron
-  version: 32d9c273155a0506d27cf73dd1246e86a470997e
+  version: 736158dc09e10f1911ca3a1e1b01f11b566ce5db
 - name: github.com/Sirupsen/logrus
-  version: d26492970760ca5d33129d2d799e34be5c4782eb
+  version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
+- name: github.com/urfave/cli
+  version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
+- name: golang.org/x/net
+  version: 1c05540f6879653db88113bc4a2b70aec4bd491f
+  subpackages:
+  - context
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
 - name: golang.org/x/sys
-  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  version: 9f7170bcd8e9f4d3691c06401119c46a769a1e03
   subpackages:
   - unix
+- name: golang.org/x/text
+  version: e56139fd9c5bc7244c76116c68e500765bb6db6b
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/genproto
+  version: 6b7d9516179cd47f4714cfeb0103ad1dede756c4
+  subpackages:
+  - googleapis/rpc/status
+- name: google.golang.org/grpc
+  version: b3ddf786825de56a4178401b7e174ee332173b66
+  subpackages:
+  - codes
+  - connectivity
+  - credentials
+  - grpclb/grpc_lb_v1
+  - grpclog
+  - internal
+  - keepalive
+  - metadata
+  - naming
+  - peer
+  - stats
+  - status
+  - tap
+  - transport
 - name: gopkg.in/yaml.v2
-  version: c1cd2254a6dd314c9d73c338c12688c9325d85c6
+  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 4b53e1bddba0e2f734514aeb6c02db652f4c6fe8
+  version: 2b1d432c8a82c9bff0b0baffaeb3ec6e92974112
   subpackages:
   - js
 - name: github.com/jtolds/gls
-  version: 8ddce2a84170772b95dd5d576c48d517b22cac63
+  version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
 - name: github.com/smartystreets/assertions
-  version: 443d812296a84445c202c085f19e18fc238f8250
+  version: 1540c14c9f1bd1abeba90f29762a4c6e50582303
   subpackages:
   - internal/go-render/render
   - internal/oglematchers
@@ -56,3 +114,5 @@ testImports:
   - convey
   - convey/gotest
   - convey/reporting
+- name: github.com/smartystreets/logging
+  version: ac3a674540761aa0b4382094ba4795f917e85c7f

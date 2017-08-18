@@ -31,27 +31,21 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/intelsdi-x/snap-plugin-collector-snmp/collector/configReader"
 	"github.com/intelsdi-x/snap-plugin-collector-snmp/collector/snmp"
-	"github.com/intelsdi-x/snap-plugin-utilities/config"
+	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 	"github.com/intelsdi-x/snap-plugin-utilities/ns"
-	"github.com/intelsdi-x/snap/control/plugin"
-	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
 	"github.com/intelsdi-x/snap/core"
-	"github.com/intelsdi-x/snap/core/serror"
 	"github.com/k-sone/snmpgo"
 )
 
 const (
 	//pluginName namespace part
-	pluginName = "snmp"
+	PluginName = "snmp"
 
 	// version of plugin
-	version = 1
-
-	//pluginType type of plugin
-	pluginType = plugin.CollectorPluginType
+	Version = 1
 
 	//vendor namespace part
-	vendor = "intel"
+	Vendor = "intel"
 
 	//setFileConfigVar configuration variable to define path to setfile
 	setFileConfigVar = "setfile"
@@ -86,8 +80,8 @@ type connection struct {
 type snmpType struct{}
 
 type snmpInterface interface {
-	newHandler(hostConfig configReader.SnmpAgent) (*snmpgo.SNMP, serror.SnapError)
-	readElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarBind, serror.SnapError)
+	newHandler(hostConfig configReader.SnmpAgent) (*snmpgo.SNMP, error)
+	readElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarBind, error)
 }
 
 var (
@@ -100,19 +94,6 @@ func init() {
 	go watchConnections()
 }
 
-// Meta returns plugin meta data
-func Meta() *plugin.PluginMeta {
-	return plugin.NewPluginMeta(
-		pluginName,
-		version,
-		pluginType,
-		[]string{plugin.SnapGOBContentType},
-		[]string{plugin.SnapGOBContentType},
-		plugin.RoutingStrategy(plugin.StickyRouting),
-		plugin.ConcurrencyCount(1),
-	)
-}
-
 // New creates initialized instance of snmp collector
 func New() *Plugin {
 	return &Plugin{metricsConfigs: make(map[string]configReader.Metric)}
@@ -120,16 +101,16 @@ func New() *Plugin {
 
 // GetMetricTypes returns list of available metric types
 // It returns error in case retrieval was not successful
-func (p *Plugin) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, error) {
-	configs, serr := getMetricsConfig(cfg)
-	if serr != nil {
-		return nil, fmt.Errorf(serr.Error())
+func (p *Plugin) GetMetricTypes(cfg plugin.Config) ([]plugin.Metric, error) {
+	configs, err := getMetricsConfig(cfg)
+	if err != nil {
+		return nil, err
 	}
 
-	mts := []plugin.MetricType{}
+	mts := []plugin.Metric{}
 	for _, cfg := range configs {
 
-		namespace := core.NewNamespace(vendor, pluginName)
+		namespace := plugin.NewNamespace(Vendor, PluginName)
 		for _, ns := range cfg.Namespace {
 			if ns.Source == configReader.NsSourceString {
 				namespace = namespace.AddStaticElement(ns.String)
@@ -148,10 +129,10 @@ func (p *Plugin) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, err
 		} else {
 			p.metricsConfigs[namespace.String()] = cfg
 
-			mt := plugin.MetricType{
-				Namespace_:   namespace,
-				Description_: cfg.Description,
-				Unit_:        cfg.Unit,
+			mt := plugin.Metric{
+				Namespace:   namespace,
+				Description: cfg.Description,
+				Unit:        cfg.Unit,
 			}
 			mts = append(mts, mt)
 
@@ -162,18 +143,18 @@ func (p *Plugin) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, err
 
 // CollectMetrics returns list of requested metric values
 // It returns error in case retrieval was not successful
-func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricType, error) {
+func (p *Plugin) CollectMetrics(metrics []plugin.Metric) ([]plugin.Metric, error) {
 	var mtxMetrics sync.Mutex
 	var wgCollectedMetrics sync.WaitGroup
 
 	//initialization of plugin structure (only once)
 	if !p.initialized {
-		configs, serr := getMetricsConfig(metrics[0])
-		if serr != nil {
-			return nil, fmt.Errorf(serr.Error())
+		configs, err := getMetricsConfig(metrics[0].Config)
+		if err != nil {
+			return nil, err
 		}
 		for _, cfg := range configs {
-			namespace := core.NewNamespace(vendor, pluginName)
+			namespace := core.NewNamespace(Vendor, PluginName)
 			for _, ns := range cfg.Namespace {
 				if ns.Source == configReader.NsSourceString {
 					namespace = namespace.AddStaticElement(ns.String)
@@ -197,30 +178,28 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 		p.initialized = true
 	}
 
-	agentConfigVars := getAgentConfig(metrics[0])
-	agentConfig, serr := configReader.GetSnmpAgentConfig(agentConfigVars)
-	if serr != nil {
-		return nil, serr
+	agentConfig, err := configReader.GetSnmpAgentConfig(metrics[0].Config)
+	if err != nil {
+		return nil, err
 	}
 
 	//lock using of connections in watchConnections
 	mtxSnmpConnections.Lock()
 	defer mtxSnmpConnections.Unlock()
 
-	conn, serr := getConnection(agentConfig)
-	if serr != nil {
-		return nil, serr
+	conn, err := getConnection(agentConfig)
+	if err != nil {
+		return nil, err
 	}
 
-	mts := []plugin.MetricType{}
+	mts := []plugin.Metric{}
 
 	for _, metric := range metrics {
 
 		//get metrics to collect
-		metricsConfigs, serr := getMetricsToCollect(metric.Namespace().String(), p.metricsConfigs)
-		if serr != nil {
-			log.WithFields(serr.Fields()).Warn(serr.Error())
-			return nil, serr
+		metricsConfigs, err := getMetricsToCollect(metric.Namespace.String(), p.metricsConfigs)
+		if err != nil {
+			return nil, err
 		}
 
 		wgCollectedMetrics.Add(len(metricsConfigs))
@@ -234,17 +213,16 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 				conn.mtx.Lock()
 
 				//get value of metric/metrics
-				results, serr := snmp_.readElements(conn.handler, cfg.Oid, cfg.Mode)
-				if serr != nil {
-					log.WithFields(serr.Fields()).Warn(serr.Error())
+				results, err := snmp_.readElements(conn.handler, cfg.Oid, cfg.Mode)
+				if err != nil {
+					log.Warn(err)
 					conn.mtx.Unlock()
 					return
 				}
 
 				//get dynamic elements of namespace parts
-				serr = getDynamicNamespaceElements(conn.handler, results, &cfg)
-				if serr != nil {
-					log.WithFields(serr.Fields()).Warn(serr.Error())
+				err = getDynamicNamespaceElements(conn.handler, results, &cfg)
+				if err != nil {
 					conn.mtx.Unlock()
 					return
 				}
@@ -255,7 +233,7 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 				for i, result := range results {
 
 					//build namespace for metric
-					namespace := core.NewNamespace(vendor, pluginName)
+					namespace := plugin.NewNamespace(Vendor, PluginName)
 					offset := len(namespace)
 					for j, ns := range cfg.Namespace {
 						if ns.Source == configReader.NsSourceString {
@@ -267,9 +245,8 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 					}
 
 					//convert metric types
-					val, serr := convertSnmpDataToMetric(result.Variable.String(), result.Variable.Type())
-					if serr != nil {
-						log.WithFields(serr.Fields()).Warn(serr.Error())
+					val, err := convertSnmpDataToMetric(result.Variable.String(), result.Variable.Type())
+					if err != nil {
 						continue
 					}
 
@@ -277,28 +254,28 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 					data := modifyNumericMetric(val, cfg.Scale, cfg.Shift)
 
 					//creating metric
-					mt := plugin.MetricType{
-						Namespace_: namespace,
-						Data_:      data,
-						Timestamp_: time.Now(),
-						Tags_: map[string]string{
+					mt := plugin.Metric{
+						Namespace: namespace,
+						Data:      data,
+						Timestamp: time.Now(),
+						Tags: map[string]string{
 							tag_snmp_agent_name:    agentConfig.Name,
 							tag_snmp_agent_address: agentConfig.Address,
 							tag_oid:                result.Oid.String()},
-						Unit_:        metric.Unit(),
-						Description_: metric.Description(),
+						Unit:        metric.Unit,
+						Description: metric.Description,
 					}
 
 					//adding metric to list of metrics
 					mtxMetrics.Lock()
 
 					//filter specific instance
-					nsPattern := strings.Replace(metric.Namespace().String(), "*", ".*", -1)
-					matched, err := regexp.MatchString(nsPattern, mt.Namespace().String())
+					nsPattern := strings.Replace(metric.Namespace.String(), "*", ".*", -1)
+					matched, err := regexp.MatchString(nsPattern, mt.Namespace.String())
 					if err != nil {
-						logFields := map[string]interface{}{"namespace": mt.Namespace().String(), "pattern": nsPattern, "match_error": err}
-						serr := serror.New(fmt.Errorf("Cannot parse namespace element for matching"), logFields)
-						log.WithFields(serr.Fields()).Warn(serr.Error())
+						logFields := map[string]interface{}{"namespace": mt.Namespace.String(), "pattern": nsPattern, "match_error": err}
+						err := fmt.Errorf("Cannot parse namespace element for matching")
+						log.WithFields(logFields).Warn(err)
 						return
 					}
 					if matched {
@@ -316,38 +293,35 @@ func (p *Plugin) CollectMetrics(metrics []plugin.MetricType) ([]plugin.MetricTyp
 
 // GetConfigPolicy returns config policy
 // It returns error in case retrieval was not successful
-func (p *Plugin) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
-	cp := cpolicy.New()
-	config := cpolicy.NewPolicyNode()
+func (p *Plugin) GetConfigPolicy() (plugin.ConfigPolicy, error) {
+	policy := plugin.NewConfigPolicy()
 
-	rule, err := cpolicy.NewStringRule(setFileConfigVar, true)
+	err := policy.AddNewStringRule([]string{Vendor, PluginName}, setFileConfigVar, true)
 	if err != nil {
-		return cp, err
+		return *policy, err
 	}
-	rule.Description = "Configuration file"
-	config.Add(rule)
 
-	return cp, nil
+	return *policy, nil
 }
 
 //NewHandler creates new connection with SNMP agent
-func (s *snmpType) newHandler(hostConfig configReader.SnmpAgent) (*snmpgo.SNMP, serror.SnapError) {
+func (s *snmpType) newHandler(hostConfig configReader.SnmpAgent) (*snmpgo.SNMP, error) {
 	return snmp.NewHandler(hostConfig)
 }
 
 //ReadElements reads data using SNMP requests
-func (s *snmpType) readElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarBind, serror.SnapError) {
+func (s *snmpType) readElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarBind, error) {
 	return snmp.ReadElements(handler, oid, mode)
 }
 
 //getConnection gets connection with SNMP agent, checks if connection with specified SNMP agent exists, if not a new connection is initialized
-func getConnection(agentConfig configReader.SnmpAgent) (connection, serror.SnapError) {
+func getConnection(agentConfig configReader.SnmpAgent) (connection, error) {
 	if conn, ok := snmpConnections[agentConfig.Address]; ok {
 		return conn, nil
 	}
-	handler, serr := snmp_.newHandler(agentConfig)
-	if serr != nil {
-		return connection{}, serr
+	handler, err := snmp_.newHandler(agentConfig)
+	if err != nil {
+		return connection{}, err
 	}
 	snmpConnections[agentConfig.Address] = connection{handler: handler, mtx: &sync.Mutex{}}
 	return snmpConnections[agentConfig.Address], nil
@@ -373,7 +347,7 @@ func watchConnections() {
 }
 
 //getDynamicNamespaceElements gets dynamic elements of namespace, either sending SNMP requests or using part of OID
-func getDynamicNamespaceElements(handler *snmpgo.SNMP, results []*snmpgo.VarBind, metric *configReader.Metric) serror.SnapError {
+func getDynamicNamespaceElements(handler *snmpgo.SNMP, results []*snmpgo.VarBind, metric *configReader.Metric) error {
 	for i := 0; i < len(metric.Namespace); i++ {
 		//clear slice with dynamic parts of namespace
 		metric.Namespace[i].Values = []string{}
@@ -384,9 +358,9 @@ func getDynamicNamespaceElements(handler *snmpgo.SNMP, results []*snmpgo.VarBind
 			continue
 
 		case configReader.NsSourceSNMP:
-			parts, serr := snmp_.readElements(handler, metric.Namespace[i].Oid, metric.Mode)
-			if serr != nil {
-				return serr
+			parts, err := snmp_.readElements(handler, metric.Namespace[i].Oid, metric.Mode)
+			if err != nil {
+				return err
 			}
 			for _, part := range parts {
 				metricNamePart := ns.ReplaceNotAllowedCharsInNamespacePart(part.Variable.String())
@@ -399,68 +373,55 @@ func getDynamicNamespaceElements(handler *snmpgo.SNMP, results []*snmpgo.VarBind
 
 				if uint(len(oidParts)) <= metric.Namespace[i].OidPart {
 
-					logFields := map[string]interface{}{
+					logFields := log.Fields{
 						"namespace_part_configuration": metric.Namespace[i],
 						"oid_part":                     metric.Namespace[i].OidPart,
 						"number_of_oid_elements":       len(metric.Namespace[i].Values)}
-					return serror.New(fmt.Errorf("Incorrect value of `oid_part`  in configuration of namespace"), logFields)
+					err := fmt.Errorf("Incorrect value of `oid_part`  in configuration of namespace")
+					log.WithFields(logFields).Warn(err)
+					return err
 				}
 				metric.Namespace[i].Values = append(metric.Namespace[i].Values, oidParts[metric.Namespace[i].OidPart])
 			}
 		}
 
 		if len(metric.Namespace[i].Values) != len(results) {
-			logFields := map[string]interface{}{
+			logFields := log.Fields{
 				"namespace_part_configuration": metric.Namespace[i],
 				"number_of_results":            len(results),
 				"number_of_namespace_elements": len(metric.Namespace[i].Values)}
-			return serror.New(fmt.Errorf("Incorrect configuration of dynamic elements of namespace, number of namespace elements is not equal to number of results"), logFields)
+			err := fmt.Errorf("Incorrect configuration of dynamic elements of namespace, number of namespace elements is not equal to number of results")
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 	}
 	return nil
 }
 
 //getMetricsConfig reads metrics parameters from configuration
-func getMetricsConfig(cfg interface{}) (configReader.Metrics, serror.SnapError) {
-	item, err := config.GetConfigItem(cfg, setFileConfigVar)
+func getMetricsConfig(cfg plugin.Config) (configReader.Metrics, error) {
+	setFilePath, err := cfg.GetString(setFileConfigVar)
 	if err != nil {
-		return nil, serror.New(err)
-	}
-	setFilePath, ok := item.(string)
-	if !ok {
-		return nil, serror.New(fmt.Errorf("Incorrect type of configuration variable, cannot parse value of %s to string", setFileConfigVar), nil)
+		return nil, err
 	}
 
-	configs, serr := configReader.GetMetricsConfig(setFilePath)
-	if serr != nil {
-		log.WithFields(serr.Fields()).Error(serr.Error())
-		return nil, serr
+	configs, err := configReader.GetMetricsConfig(setFilePath)
+	if err != nil {
+		return nil, err
 	}
 
 	return configs, nil
 }
 
-//getAgentConfig reads agent parameters from configuration and creates map of agent parameters
-func getAgentConfig(metricTypes plugin.MetricType) map[string]interface{} {
-	cfg := make(map[string]interface{})
-	for _, snmpAgentParam := range configReader.SnmpAgentConfigParameters {
-		item, err := config.GetConfigItem(metricTypes, snmpAgentParam)
-		if err == nil {
-			cfg[snmpAgentParam] = item
-		}
-	}
-	return cfg
-}
-
 //getMetricsToCollects gets configuration of metrics which are requested through task
-func getMetricsToCollect(namespace string, metrics map[string]configReader.Metric) (map[string]configReader.Metric, serror.SnapError) {
+func getMetricsToCollect(namespace string, metrics map[string]configReader.Metric) (map[string]configReader.Metric, error) {
 	collectedMetrics := make(map[string]configReader.Metric)
 
 	// Filter out setfile based metrics by given namespace
 	for ns := range metrics {
 		matched, err := regexp.MatchString(strings.Replace(ns, "*", ".*", -1), namespace)
 		if err != nil {
-			return nil, serror.New(err)
+			return nil, err
 		}
 
 		if matched {
@@ -468,13 +429,13 @@ func getMetricsToCollect(namespace string, metrics map[string]configReader.Metri
 		}
 	}
 	if len(collectedMetrics) == 0 {
-		return nil, serror.New(fmt.Errorf("Metric namespace (`%s`) is not supported by this plugin", namespace), nil)
+		return nil, fmt.Errorf("Metric namespace (`%s`) is not supported by this plugin", namespace)
 	}
 	return collectedMetrics, nil
 }
 
 //convertSnmpDataToMetric converts data received using SNMP request to supported data type
-func convertSnmpDataToMetric(snmpData string, snmpType string) (interface{}, serror.SnapError) {
+func convertSnmpDataToMetric(snmpData string, snmpType string) (interface{}, error) {
 	var val interface{}
 	var err error
 
@@ -488,13 +449,14 @@ func convertSnmpDataToMetric(snmpData string, snmpType string) (interface{}, ser
 	case "OctetString", "IpAddress", "Object Identifier":
 		val = snmpData
 	default:
-		serr := serror.New(fmt.Errorf("Unrecognized type of data, metric is returned as string"), map[string]interface{}{"data": snmpData, "type": snmpType})
-		log.WithFields(serr.Fields()).Warn(serr.Error())
+		log.WithFields(log.Fields{"data": snmpData, "type": snmpType}).Warn(
+			fmt.Errorf("Unrecognized type of data, metric is returned as string"))
 		val = snmpData
 	}
 
 	if err != nil {
-		return nil, serror.New(err, map[string]interface{}{"data": snmpData, "type": snmpType})
+		log.WithFields(log.Fields{"data": snmpData, "type": snmpType}).Warn(err)
+		return nil, err
 	}
 	return val, nil
 }

@@ -27,11 +27,10 @@ import (
 	"time"
 
 	"github.com/intelsdi-x/snap-plugin-collector-snmp/collector/configReader"
-	"github.com/intelsdi-x/snap/core/serror"
 	"github.com/k-sone/snmpgo"
 )
 
-func NewHandler(agentConfig configReader.SnmpAgent) (*snmpgo.SNMP, serror.SnapError) {
+func NewHandler(agentConfig configReader.SnmpAgent) (*snmpgo.SNMP, error) {
 	handler, err := snmpgo.NewSNMP(snmpgo.SNMPArguments{
 		Version:          getSNMPVersion(agentConfig.SnmpVersion),
 		Network:          agentConfig.Network,
@@ -51,19 +50,19 @@ func NewHandler(agentConfig configReader.SnmpAgent) (*snmpgo.SNMP, serror.SnapEr
 	})
 
 	if err != nil {
-		return nil, serror.New(err)
+		return nil, err
 	}
 	return handler, nil
 }
 
-func ReadElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarBind, serror.SnapError) {
+func ReadElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarBind, error) {
 
 	//results received through SNMP requests
 	results := []*snmpgo.VarBind{}
 
 	if err := handler.Open(); err != nil {
 		// Failed to open connection
-		return results, serror.New(err)
+		return results, err
 	}
 
 	//get elements in node OID
@@ -81,7 +80,7 @@ func ReadElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarB
 		oids, err := snmpgo.NewOids([]string{oid})
 		if err != nil {
 			// Failed to parse Oids
-			return results, serror.New(err)
+			return results, err
 		}
 
 		var pdu snmpgo.Pdu
@@ -92,16 +91,16 @@ func ReadElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarB
 		}
 		if err != nil {
 			// Failed to request
-			return results, serror.New(err)
+			return results, err
 		}
 
 		if pdu.ErrorStatus() != snmpgo.NoError {
 			// Received an error from the agent
-			return results, serror.New(fmt.Errorf("Received an error from the SNMP agent: %v", pdu.ErrorStatus()))
+			return results, fmt.Errorf("Received an error from the SNMP agent: %v", pdu.ErrorStatus())
 		}
 
 		if len(pdu.VarBinds()) != 1 {
-			return results, serror.New(fmt.Errorf("Unaccepted number of results, received %v results", len(pdu.VarBinds())))
+			return results, fmt.Errorf("Unaccepted number of results, received %v results", len(pdu.VarBinds()))
 		}
 
 		// select a VarBind

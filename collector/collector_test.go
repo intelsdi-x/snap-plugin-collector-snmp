@@ -27,11 +27,7 @@ import (
 	"testing"
 
 	"github.com/intelsdi-x/snap-plugin-collector-snmp/collector/configReader"
-	"github.com/intelsdi-x/snap/control/plugin"
-	"github.com/intelsdi-x/snap/core"
-	"github.com/intelsdi-x/snap/core/cdata"
-	"github.com/intelsdi-x/snap/core/ctypes"
-	"github.com/intelsdi-x/snap/core/serror"
+	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 	"github.com/k-sone/snmpgo"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -48,10 +44,10 @@ const (
 
 type snmpHandlerEntry struct {
 	s   *snmpgo.SNMP
-	err serror.SnapError
+	err error
 }
 
-func newSNMPHandler(s *snmpgo.SNMP, e serror.SnapError) snmpHandlerEntry {
+func newSNMPHandler(s *snmpgo.SNMP, e error) snmpHandlerEntry {
 	return snmpHandlerEntry{s, e}
 }
 
@@ -62,24 +58,24 @@ type snmpMock struct {
 
 var snmpHandlerTestTable = map[int]snmpHandlerEntry{
 	SUCCESSFULLY_CREATED_HANDLER:   newSNMPHandler(&snmpgo.SNMP{}, nil),
-	UNSUCCESSFULLY_CREATED_HANDLER: newSNMPHandler(&snmpgo.SNMP{}, serror.New(fmt.Errorf("Error - new handler not created"))),
+	UNSUCCESSFULLY_CREATED_HANDLER: newSNMPHandler(&snmpgo.SNMP{}, fmt.Errorf("Error - new handler not created")),
 }
 
-func (m *snmpMock) newHandler(hostConfig configReader.SnmpAgent) (*snmpgo.SNMP, serror.SnapError) {
+func (m *snmpMock) newHandler(hostConfig configReader.SnmpAgent) (*snmpgo.SNMP, error) {
 	return m.handlerEntry.s, m.handlerEntry.err
 }
 
-func (m *snmpMock) readElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarBind, serror.SnapError) {
+func (m *snmpMock) readElements(handler *snmpgo.SNMP, oid string, mode string) ([]*snmpgo.VarBind, error) {
 	varBinds := []*snmpgo.VarBind{m.elementEntry.element}
 	return varBinds, m.elementEntry.err
 }
 
 type snmpElementEntry struct {
 	element *snmpgo.VarBind
-	err     serror.SnapError
+	err     error
 }
 
-func newElementEntry(oid string, val snmpgo.Variable, e serror.SnapError) snmpElementEntry {
+func newElementEntry(oid string, val snmpgo.Variable, e error) snmpElementEntry {
 	newOid, _ := snmpgo.NewOid(oid)
 	return snmpElementEntry{snmpgo.NewVarBind(newOid, val), e}
 }
@@ -89,30 +85,18 @@ var snmpElementTestTable = map[int]snmpElementEntry{
 	SNMP_ELEMENT_CORRECT_COUNTER32:    newElementEntry(".1.3.6.1.2.1.1.9.1.3.1", snmpgo.NewCounter32(123), nil),
 	SNMP_ELEMENT_CORRECT_COUNTER64:    newElementEntry(".1.3.6.1.2.1.1.9.1.3.1", snmpgo.NewCounter64(123), nil),
 	SNMP_ELEMENT_CORRECT_INTEGER:      newElementEntry(".1.3.6.1.2.1.1.9.1.3.1", snmpgo.NewInteger(123), nil),
-	SNMP_ELEMENT_INCORRECT:            newElementEntry("", nil, serror.New(fmt.Errorf("Error - snmp request fails"))),
+	SNMP_ELEMENT_INCORRECT:            newElementEntry("", nil, fmt.Errorf("Error - snmp request fails")),
 }
 
-func (m *snmpMock) ReadElement(handler *snmpgo.SNMP, oid string) (*snmpgo.VarBind, serror.SnapError) {
+func (m *snmpMock) ReadElement(handler *snmpgo.SNMP, oid string) (*snmpgo.VarBind, error) {
 	return m.elementEntry.element, m.elementEntry.err
-}
-
-func TestMeta(t *testing.T) {
-	Convey("Calling Meta function", t, func() {
-		meta := Meta()
-		So(meta.Name, ShouldResemble, pluginName)
-		So(meta.Version, ShouldResemble, version)
-		So(meta.Type, ShouldResemble, pluginType)
-		So(meta.AcceptedContentTypes[0], ShouldEqual, plugin.SnapGOBContentType)
-		So(meta.ReturnedContentTypes[0], ShouldEqual, plugin.SnapGOBContentType)
-		So(meta.RoutingStrategy, ShouldEqual, plugin.StickyRouting)
-	})
 }
 
 func TestGetMetricTypes(t *testing.T) {
 	Convey("Getting exposed metric types", t, func() {
 
 		Convey("when no configuration item available", func() {
-			cfg := plugin.NewPluginConfigType()
+			cfg := plugin.NewConfig()
 			plugin := New()
 			So(func() { plugin.GetMetricTypes(cfg) }, ShouldNotPanic)
 			_, err := plugin.GetMetricTypes(cfg)
@@ -125,8 +109,8 @@ func TestGetMetricTypes(t *testing.T) {
 			deleteMockFile()
 
 			//create configuration
-			config := plugin.NewPluginConfigType()
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config[setFileConfigVar] = mockFilePath
 
 			So(func() { plg.GetMetricTypes(config) }, ShouldNotPanic)
 			_, err := plg.GetMetricTypes(config)
@@ -140,8 +124,8 @@ func TestGetMetricTypes(t *testing.T) {
 			deleteMockFile()
 
 			//create configuration
-			config := plugin.NewPluginConfigType()
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueInt{Value: 3})
+			config := plugin.NewConfig()
+			config[setFileConfigVar] = 3
 
 			So(func() { plg.GetMetricTypes(config) }, ShouldNotPanic)
 			_, err := plg.GetMetricTypes(config)
@@ -155,8 +139,8 @@ func TestGetMetricTypes(t *testing.T) {
 			createMockFile(mockFileContEmpty)
 			defer deleteMockFile()
 
-			config := plugin.NewPluginConfigType()
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config[setFileConfigVar] = mockFilePath
 
 			So(func() { plg.GetMetricTypes(config) }, ShouldNotPanic)
 			_, err := plg.GetMetricTypes(config)
@@ -168,8 +152,8 @@ func TestGetMetricTypes(t *testing.T) {
 			createMockFile(mockFileContWrong)
 			defer deleteMockFile()
 
-			config := plugin.NewPluginConfigType()
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config[setFileConfigVar] = mockFilePath
 
 			_, err := plg.GetMetricTypes(config)
 
@@ -181,8 +165,8 @@ func TestGetMetricTypes(t *testing.T) {
 			createMockFile(mockFileCont)
 			defer deleteMockFile()
 
-			config := plugin.NewPluginConfigType()
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config[setFileConfigVar] = mockFilePath
 
 			mts, err := plg.GetMetricTypes(config)
 
@@ -192,7 +176,7 @@ func TestGetMetricTypes(t *testing.T) {
 			Convey("then correct list of metrics is returned", func() {
 				namespaces := []string{}
 				for _, m := range mts {
-					namespaces = append(namespaces, m.Namespace().String())
+					namespaces = append(namespaces, m.Namespace.String())
 				}
 				So(namespaces, ShouldContain, "/intel/snmp/hrSystem/*/*/*/value")
 				So(namespaces, ShouldContain, "/intel/snmp/system/sysORTable/sysOREntry/sysORDescr/*/value")
@@ -237,35 +221,35 @@ func TestCollectMetrics(t *testing.T) {
 			defer deleteMockFile()
 
 			//create plugin config
-			pluginConfig := plugin.NewPluginConfigType()
-			pluginConfig.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			pluginConfig := plugin.NewConfig()
+			pluginConfig[setFileConfigVar] = mockFilePath
 
 			//create host config
-			config := cdata.NewNode()
-			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
-			config.AddItem("snmp_agent_address", ctypes.ConfigValueStr{Value: "127.0.0.1"})
-			config.AddItem("community", ctypes.ConfigValueStr{Value: "public"})
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config["snmp_version"] = "v2c"
+			config["snmp_agent_address"] = "127.0.0.1"
+			config["community"] = "public"
+			config[setFileConfigVar] = mockFilePath
 
 			//setfile is read in GetMetricsTypes
 			mts, err := plg.GetMetricTypes(pluginConfig)
 			So(err, ShouldBeNil)
 
 			//specific instance metrics
-			mtsSpecific := []plugin.MetricType{
-				plugin.MetricType{
-					Namespace_: core.NewNamespace("intel", "snmp", "hrSystem", "1", "3", "123", "value"),
+			mtsSpecific := []plugin.Metric{
+				plugin.Metric{
+					Namespace: plugin.NewNamespace("intel", "snmp", "hrSystem", "1", "3", "123", "value"),
 				},
-				plugin.MetricType{
-					Namespace_: core.NewNamespace("intel", "snmp", "system", "sysORTable", "sysOREntry", "sysORDescr", "123", "value"),
+				plugin.Metric{
+					Namespace: plugin.NewNamespace("intel", "snmp", "system", "sysORTable", "sysOREntry", "sysORDescr", "123", "value"),
 				},
 			}
 
 			for i := range mts {
-				mts[i].Config_ = config
+				mts[i].Config = config
 			}
 			for i := range mtsSpecific {
-				mtsSpecific[i].Config_ = config
+				mtsSpecific[i].Config = config
 			}
 
 			Convey("when received data with OCTET_STRING type", func() {
@@ -277,7 +261,7 @@ func TestCollectMetrics(t *testing.T) {
 
 				So(err, ShouldBeNil)
 				So(metrics, ShouldNotBeEmpty)
-				So(metrics[0].Data().(string), ShouldEqual, "variable123")
+				So(metrics[0].Data.(string), ShouldEqual, "variable123")
 			})
 
 			Convey("when received data with COUNTER32  type", func() {
@@ -289,7 +273,7 @@ func TestCollectMetrics(t *testing.T) {
 
 				So(err, ShouldBeNil)
 				So(metrics, ShouldNotBeEmpty)
-				So(metrics[0].Data().(uint64), ShouldEqual, 123)
+				So(metrics[0].Data.(uint64), ShouldEqual, 123)
 			})
 
 			Convey("when received data with COUNTER64  type", func() {
@@ -301,7 +285,7 @@ func TestCollectMetrics(t *testing.T) {
 
 				So(err, ShouldBeNil)
 				So(metrics, ShouldNotBeEmpty)
-				So(metrics[0].Data().(uint64), ShouldEqual, 123)
+				So(metrics[0].Data.(uint64), ShouldEqual, 123)
 			})
 
 			Convey("when received data with INTEGER  type", func() {
@@ -313,7 +297,7 @@ func TestCollectMetrics(t *testing.T) {
 
 				So(err, ShouldBeNil)
 				So(metrics, ShouldNotBeEmpty)
-				So(metrics[0].Data().(int64), ShouldEqual, 123)
+				So(metrics[0].Data.(int64), ShouldEqual, 123)
 			})
 
 			Convey("when metric have dynamic namespace elements", func() {
@@ -325,7 +309,7 @@ func TestCollectMetrics(t *testing.T) {
 
 				So(err, ShouldBeNil)
 				So(metrics, ShouldNotBeEmpty)
-				isDynamic, dynamics := metrics[0].Namespace().IsDynamic()
+				isDynamic, dynamics := metrics[0].Namespace.IsDynamic()
 				So(isDynamic, ShouldEqual, true)
 				So(dynamics, ShouldHaveLength, 3)
 				So(dynamics, ShouldContain, 3)
@@ -343,8 +327,8 @@ func TestCollectMetrics(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(metrics, ShouldNotBeEmpty)
 				So(len(metrics), ShouldEqual, 2)
-				So(metrics[0].Data().(int64), ShouldEqual, 123)
-				So(metrics[1].Data().(int64), ShouldEqual, 123)
+				So(metrics[0].Data.(int64), ShouldEqual, 123)
+				So(metrics[1].Data.(int64), ShouldEqual, 123)
 			})
 		})
 
@@ -359,21 +343,21 @@ func TestCollectMetrics(t *testing.T) {
 			plg := New()
 
 			//create metric
-			mts := []plugin.MetricType{plugin.MetricType{Namespace_: core.NewNamespace(vendor, pluginName, "__metric1__")}}
+			mts := []plugin.Metric{plugin.Metric{Namespace: plugin.NewNamespace(Vendor, PluginName, "__metric1__")}}
 
 			//create plugin config
-			pluginConfig := plugin.NewPluginConfigType()
-			pluginConfig.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			pluginConfig := plugin.NewConfig()
+			pluginConfig[setFileConfigVar] = mockFilePath
 
 			//create host config
-			config := cdata.NewNode()
-			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
-			config.AddItem("snmp_agent_address", ctypes.ConfigValueStr{Value: "127.0.0.1"})
-			config.AddItem("community", ctypes.ConfigValueStr{Value: "public"})
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config["snmp_version"] = "v2c"
+			config["snmp_agent_address"] = "127.0.0.1"
+			config["community"] = "public"
+			config[setFileConfigVar] = mockFilePath
 
 			for i := range mts {
-				mts[i].Config_ = config
+				mts[i].Config = config
 			}
 			So(func() { plg.CollectMetrics(mts) }, ShouldNotPanic)
 
@@ -396,17 +380,17 @@ func TestCollectMetrics(t *testing.T) {
 			plg := New()
 
 			//create metric
-			mts := []plugin.MetricType{plugin.MetricType{Namespace_: core.NewNamespace(vendor, pluginName, "incorrect_metric")}}
+			mts := []plugin.Metric{plugin.Metric{Namespace: plugin.NewNamespace(Vendor, PluginName, "incorrect_metric")}}
 
 			//create host config
-			config := cdata.NewNode()
-			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
-			config.AddItem("snmp_agent_address", ctypes.ConfigValueStr{Value: "127.0.0.1"})
-			config.AddItem("community", ctypes.ConfigValueStr{Value: "public"})
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config["snmp_version"] = "v2c"
+			config["snmp_agent_address"] = "127.0.0.1"
+			config["community"] = "public"
+			config[setFileConfigVar] = mockFilePath
 
 			for i := range mts {
-				mts[i].Config_ = config
+				mts[i].Config = config
 			}
 
 			So(func() { plg.CollectMetrics(mts) }, ShouldNotPanic)
@@ -430,17 +414,17 @@ func TestCollectMetrics(t *testing.T) {
 			plg := New()
 
 			//create metric
-			mts := []plugin.MetricType{plugin.MetricType{Namespace_: core.NewNamespace(vendor, pluginName, "__metric1__")}}
+			mts := []plugin.Metric{plugin.Metric{Namespace: plugin.NewNamespace(Vendor, PluginName, "__metric1__")}}
 
 			//create host config
-			config := cdata.NewNode()
-			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
-			config.AddItem("snmp_agent_address", ctypes.ConfigValueStr{Value: "127.0.0.1"})
-			config.AddItem("community", ctypes.ConfigValueStr{Value: "public"})
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config["snmp_version"] = "v2c"
+			config["snmp_agent_address"] = "127.0.0.1"
+			config["community"] = "public"
+			config[setFileConfigVar] = mockFilePath
 
 			for i := range mts {
-				mts[i].Config_ = config
+				mts[i].Config = config
 			}
 
 			mts, err := plg.CollectMetrics(mts)
@@ -460,17 +444,17 @@ func TestCollectMetrics(t *testing.T) {
 			plg := New()
 
 			//create metric w namespace with correct namespace length
-			mts := []plugin.MetricType{plugin.MetricType{Namespace_: core.NewNamespace(vendor, pluginName, "__metric1__")}}
+			mts := []plugin.Metric{plugin.Metric{Namespace: plugin.NewNamespace(Vendor, PluginName, "__metric1__")}}
 
 			//create host config
-			config := cdata.NewNode()
-			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "incorrect snmp version"})
-			config.AddItem("snmp_agent_address", ctypes.ConfigValueStr{Value: "127.0.0.1"})
-			config.AddItem("community", ctypes.ConfigValueStr{Value: "public"})
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config["snmp_version"] = "incorrect snmp version"
+			config["snmp_agent_address"] = "127.0.0.1"
+			config["community"] = "public"
+			config[setFileConfigVar] = mockFilePath
 
 			for i := range mts {
-				mts[i].Config_ = config
+				mts[i].Config = config
 			}
 
 			So(func() { plg.CollectMetrics(mts) }, ShouldNotPanic)
@@ -491,22 +475,22 @@ func TestCollectMetrics(t *testing.T) {
 			plg := New()
 
 			//create plugin config
-			pluginConfig := plugin.NewPluginConfigType()
-			pluginConfig.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			pluginConfig := plugin.NewConfig()
+			pluginConfig[setFileConfigVar] = mockFilePath
 
 			//setfile is read in GetMetricsTypes
 			mts, err := plg.GetMetricTypes(pluginConfig)
 			So(err, ShouldBeNil)
 
 			//create host config
-			config := cdata.NewNode()
-			config.AddItem("snmp_version", ctypes.ConfigValueStr{Value: "v2c"})
-			config.AddItem("snmp_agent_address", ctypes.ConfigValueStr{Value: "127.0.0.1"})
-			config.AddItem("community", ctypes.ConfigValueStr{Value: "public"})
-			config.AddItem(setFileConfigVar, ctypes.ConfigValueStr{Value: mockFilePath})
+			config := plugin.NewConfig()
+			config["snmp_version"] = "v2c"
+			config["snmp_agent_address"] = "127.0.0.1"
+			config["community"] = "public"
+			config[setFileConfigVar] = mockFilePath
 
 			for i := range mts {
-				mts[i].Config_ = config
+				mts[i].Config = config
 			}
 
 			So(func() { plg.CollectMetrics(mts) }, ShouldNotPanic)
@@ -757,8 +741,8 @@ func deleteMockFile() {
 }
 
 var (
-	mockMts = []plugin.MetricType{
-		plugin.MetricType{Namespace_: core.NewNamespace(vendor, pluginName, "*", "value")},
+	mockMts = []plugin.Metric{
+		plugin.Metric{Namespace: plugin.NewNamespace(Vendor, PluginName, "*", "value")},
 	}
 
 	mockFilePath = "./temp_setfile.json"
