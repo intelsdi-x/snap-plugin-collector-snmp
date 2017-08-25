@@ -38,34 +38,35 @@ import (
 )
 
 const (
-	//pluginName namespace part
+	// PluginName namespace part
 	PluginName = "snmp"
 
-	// version of plugin
-	Version = 1
+	// Version of plugin
+	Version = 2
 
-	//vendor namespace part
+	// Vendor namespace part
 	Vendor = "intel"
 
-	//setFileConfigVar configuration variable to define path to setfile
+	// setFileConfigVar configuration variable to define path to setfile
 	setFileConfigVar = "setfile"
 
-	//tag_snmp_agent_name indicates SNMP agent name, tag which is added to metrics
-	tag_snmp_agent_name = "SNMP_AGENT_NAME"
+	// tagSnmpAgentName indicates SNMP agent name, tag which is added to metrics
+	tagSnmpAgentName = "SNMP_AGENT_NAME"
 
-	//tag_snmp_agent_address indicates SNMP agent address, tag which is added to metrics
-	tag_snmp_agent_address = "SNMP_AGENT_ADDRESS"
+	// tagSnmpAgentAddress indicates SNMP agent address, tag which is added to metrics
+	tagSnmpAgentAddress = "SNMP_AGENT_ADDRESS"
 
-	//tag_oid indicates metric OID, tag which is added to metrics
-	tag_oid = "OID"
+	// tagOid indicates metric OID, tag which is added to metrics
+	tagOid = "OID"
 
-	//the max time a connection can be unused.
+	// the max time a connection can be unused.
 	connectionIdle = time.Minute * 30
 
-	//the time between checking of connections usage
+	// the time between checking of connections usage
 	connectionWait = time.Minute * 15
 )
 
+// Plugin main structure
 type Plugin struct {
 	initialized    bool
 	metricsConfigs map[string]configReader.Metric
@@ -259,9 +260,9 @@ func (p *Plugin) CollectMetrics(metrics []plugin.Metric) ([]plugin.Metric, error
 						Data:      data,
 						Timestamp: time.Now(),
 						Tags: map[string]string{
-							tag_snmp_agent_name:    agentConfig.Name,
-							tag_snmp_agent_address: agentConfig.Address,
-							tag_oid:                result.Oid.String()},
+							tagSnmpAgentName:    agentConfig.Name,
+							tagSnmpAgentAddress: agentConfig.Address,
+							tagOid:              result.Oid.String()},
 						Unit:        metric.Unit,
 						Description: metric.Description,
 					}

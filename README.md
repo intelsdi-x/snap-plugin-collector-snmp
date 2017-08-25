@@ -401,7 +401,7 @@ $ ./build/linux/x86_64/snap-plugin-collector-snmp --config '{
 }'
 ```
 
-If configuration is valid, plugin should output metric catalog and collected metrics to stdout.
+If configuration is valid, plugin should output metric catalog and collected metrics to standard output.
 As runnig diagnostic mode command for this plugin is not handy, you can find above example as Bash script in `examples/standalone.sh`.
 
 ### Roadmap

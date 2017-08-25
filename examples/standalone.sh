@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./build/linux/x86_64/snap-plugin-collector-snmp --config '{
+../build/linux/x86_64/snap-plugin-collector-snmp --config '{
     "setfile": "setfile.json",
     "snmp_agent_name": "host1",
     "snmp_agent_address": "127.0.0.1:161",
