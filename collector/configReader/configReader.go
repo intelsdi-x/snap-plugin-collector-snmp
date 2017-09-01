@@ -26,7 +26,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/intelsdi-x/snap/core/serror"
+	log "github.com/Sirupsen/logrus"
+	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -127,8 +128,8 @@ const (
 	//missingRequiredParameter error message for missing required parameter
 	missingRequiredParameter = "Missing required parameter in configuration (%s)"
 
-	//inCorrectValueOfParameter error message for incorrect value of parameter
-	inCorrectValueOfParameter = "Incorrect value of parameter (%s), possible options: %v"
+	//incorrectValueOfParameter error message for incorrect value of parameter
+	incorrectValueOfParameter = "Incorrect value of parameter (%s), possible options: %v"
 )
 
 type SnmpAgent struct {
@@ -208,102 +209,123 @@ func (r *cfgReaderType) ReadFile(s string) ([]byte, error) {
 }
 
 //GetMetricsConfig decodes and validates configuration of SNMP agent
-func GetSnmpAgentConfig(configMap map[string]interface{}) (SnmpAgent, serror.SnapError) {
-	config, serr := decodeSnmpAgentConfig(configMap)
-	if serr != nil {
-		return config, serr
+func GetSnmpAgentConfig(configMap plugin.Config) (SnmpAgent, error) {
+	config, err := decodeSnmpAgentConfig(configMap)
+	if err != nil {
+		return config, err
 	}
 
-	serr = validateSnmpAgentConfig(config)
-	if serr != nil {
-		return config, serr
+	err = validateSnmpAgentConfig(config)
+	if err != nil {
+		return config, err
 	}
 
 	return config, nil
 }
 
 //GetMetricsConfig reads and validates configuration of metrics
-func GetMetricsConfig(setFilePath string) (Metrics, serror.SnapError) {
-	config, serr := readMetricConfigFile(setFilePath)
-	if serr != nil {
-		return config, serr
+func GetMetricsConfig(setFilePath string) (Metrics, error) {
+	config, err := readMetricConfigFile(setFilePath)
+	if err != nil {
+		return config, err
 	}
 
-	serr = validateMetricConfig(config)
-	if serr != nil {
-		return config, serr
+	err = validateMetricConfig(config)
+	if err != nil {
+		return config, err
 	}
 
 	return config, nil
 }
 
 //decodeSnmpAgentConfig decodes configuration of SNMP agent into structure
-func decodeSnmpAgentConfig(config map[string]interface{}) (SnmpAgent, serror.SnapError) {
+func decodeSnmpAgentConfig(config plugin.Config) (SnmpAgent, error) {
 	var snmpAgentConfig SnmpAgent
 	logFields := map[string]interface{}{}
 	err := mapstructure.Decode(config, &snmpAgentConfig)
 	if err != nil {
-		return snmpAgentConfig, serror.New(err, logFields)
+		log.WithFields(logFields).Warn(err)
+		return snmpAgentConfig, err
 	}
 	return snmpAgentConfig, nil
 }
 
 //validateSnmpAgentConfig validates configuration of SNMP agent
-func validateSnmpAgentConfig(config SnmpAgent) serror.SnapError {
+func validateSnmpAgentConfig(config SnmpAgent) error {
 	logFields := map[string]interface{}{}
 	logFields["agent_config"] = config
 
 	if !checkSetParameter(config.Address) {
 		logFields["parameter"] = agentAddress
-		return serror.New(fmt.Errorf(missingRequiredParameter, agentAddress), logFields)
+		err := fmt.Errorf(missingRequiredParameter, agentAddress)
+		log.WithFields(logFields).Warn(err)
+		return err
 	}
 
 	if !checkSetParameter(config.SnmpVersion) {
 		logFields["parameter"] = agentSnmpVersion
-		return serror.New(fmt.Errorf(missingRequiredParameter, agentSnmpVersion), logFields)
+		err := fmt.Errorf(missingRequiredParameter, agentSnmpVersion)
+		log.WithFields(logFields).Warn(err)
+		return err
 	}
 
 	if !checkPossibleOptions(config.SnmpVersion, snmpVersionOptions) {
 		logFields["parameter"] = agentSnmpVersion
-		return serror.New(fmt.Errorf(inCorrectValueOfParameter, config.SnmpVersion, snmpVersionOptions), logFields)
+		err := fmt.Errorf(incorrectValueOfParameter, config.SnmpVersion, snmpVersionOptions)
+		log.WithFields(logFields).Warn(err)
+		return err
 	}
 
 	if config.SnmpVersion == snmpv1 || config.SnmpVersion == snmpv2 {
 		//check required fields for SNMP v1 and SNMP v2c
 		if !checkSetParameter(config.Community) {
 			logFields["paramgiteter"] = agentCommunity
-			return serror.New(fmt.Errorf(missingRequiredParameter, agentCommunity), logFields)
+			err := fmt.Errorf(missingRequiredParameter, agentCommunity)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 	} else {
 		//check required fields for SNMP v3
 		if !checkSetParameter(config.SecurityLevel) {
 			logFields["parameter"] = agentSecurityLevel
-			return serror.New(fmt.Errorf(missingRequiredParameter, agentSecurityLevel), logFields)
+			err := fmt.Errorf(missingRequiredParameter, agentSecurityLevel)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		if !checkPossibleOptions(config.SecurityLevel, securityLevelOptions) {
 			logFields["parameter"] = agentSecurityLevel
-			return serror.New(fmt.Errorf(inCorrectValueOfParameter, config.SecurityLevel, securityLevelOptions), logFields)
+			err := fmt.Errorf(incorrectValueOfParameter, config.SecurityLevel, securityLevelOptions)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		if !checkSetParameter(config.AuthProtocol) {
 			logFields["parameter"] = agentAuthProtocol
-			return serror.New(fmt.Errorf(missingRequiredParameter, agentAuthProtocol), logFields)
+			err := fmt.Errorf(missingRequiredParameter, agentAuthProtocol)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		if !checkPossibleOptions(config.AuthProtocol, authProtocolOptions) {
 			logFields["parameter"] = agentAuthProtocol
-			return serror.New(fmt.Errorf(inCorrectValueOfParameter, config.AuthProtocol, authProtocolOptions), logFields)
+			err := fmt.Errorf(incorrectValueOfParameter, config.AuthProtocol, authProtocolOptions)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		if !checkSetParameter(config.PrivProtocol) {
 			logFields["parameter"] = agentPrivProtocol
-			return serror.New(fmt.Errorf(missingRequiredParameter, agentPrivProtocol), logFields)
+			err := fmt.Errorf(missingRequiredParameter, agentPrivProtocol)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		if !checkPossibleOptions(config.PrivProtocol, privProtocolOptions) {
 			logFields["parameter"] = agentPrivProtocol
-			return serror.New(fmt.Errorf(inCorrectValueOfParameter, config.PrivProtocol, privProtocolOptions), logFields)
+			err := fmt.Errorf(incorrectValueOfParameter, config.PrivProtocol, privProtocolOptions)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		//set default values
@@ -320,7 +342,7 @@ func validateSnmpAgentConfig(config SnmpAgent) serror.SnapError {
 }
 
 //readMetricConfigFile reads metric configuration from file and decodes it to structures
-func readMetricConfigFile(setFilePath string) (Metrics, serror.SnapError) {
+func readMetricConfigFile(setFilePath string) (Metrics, error) {
 	var config Metrics
 	logFields := map[string]interface{}{}
 	logFields["setfile_path"] = setFilePath
@@ -328,22 +350,27 @@ func readMetricConfigFile(setFilePath string) (Metrics, serror.SnapError) {
 	setFileContent, err := cfgReader.ReadFile(setFilePath)
 	logFields["setfile_content"] = setFileContent
 	if err != nil {
-		return config, serror.New(err, logFields)
+		log.WithFields(logFields).Warn(err)
+		return config, err
 	}
 
 	if len(setFileContent) == 0 {
-		return config, serror.New(fmt.Errorf("Metrics configuration file is empty"), logFields)
+		err := fmt.Errorf("Metrics configuration file is empty")
+		log.WithFields(logFields).Warn(err)
+		return config, err
 	}
 
 	err = json.Unmarshal(setFileContent, &config)
 	if err != nil {
-		return config, serror.New(fmt.Errorf("Settings file cannot be unmarshalled, err: %s", err), logFields)
+		err := fmt.Errorf("Settings file cannot be unmarshalled, err: %s", err)
+		log.WithFields(logFields).Warn(err)
+		return config, err
 	}
 	return config, nil
 }
 
 //validateMetricConfig validates configuration of metrics
-func validateMetricConfig(metricConfigs Metrics) serror.SnapError {
+func validateMetricConfig(metricConfigs Metrics) error {
 	logFields := map[string]interface{}{}
 	logFields["metric_config"] = metricConfigs
 
@@ -353,25 +380,31 @@ func validateMetricConfig(metricConfigs Metrics) serror.SnapError {
 		//check namespace -  required parameter
 		if !checkSetParameter(metricConfigs[i].Namespace) {
 			logFields["parameter"] = metricNamespace
-			return serror.New(fmt.Errorf(missingRequiredParameter, metricNamespace), logFields)
+			err := fmt.Errorf(missingRequiredParameter, metricNamespace)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 		//validate namespace configuration
-		if serr := validateNamespace(metricConfigs[i].Namespace); serr != nil {
+		if err := validateNamespace(metricConfigs[i].Namespace); err != nil {
 			logFields["parameter"] = metricNamespace
-			serr.SetFields(logFields)
-			return serr
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		lastNamespacePart := metricConfigs[i].Namespace[len(metricConfigs[i].Namespace)-1]
 		if lastNamespacePart.Source != NsSourceString {
 			logFields["parameter"] = metricNamespace
-			return serror.New(fmt.Errorf("The last namespace element must have `source` set to `string`"), logFields)
+			err := fmt.Errorf("The last namespace element must have `source` set to `string`")
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		//check OID -  required parameter
 		if !checkSetParameter(metricConfigs[i].Oid) {
 			logFields["parameter"] = metricOid
-			return serror.New(fmt.Errorf(missingRequiredParameter, metricOid), logFields)
+			err := fmt.Errorf(missingRequiredParameter, metricOid)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		//set default mode option if empty
@@ -382,7 +415,9 @@ func validateMetricConfig(metricConfigs Metrics) serror.SnapError {
 		//check possible options for mode parameter
 		if !checkPossibleOptions(metricConfigs[i].Mode, modeOptions) {
 			logFields["parameter"] = metricMode
-			return serror.New(fmt.Errorf(inCorrectValueOfParameter, metricConfigs[i].Mode, modeOptions), logFields)
+			err := fmt.Errorf(incorrectValueOfParameter, metricConfigs[i].Mode, modeOptions)
+			log.WithFields(logFields).Warn(err)
+			return err
 		}
 
 		//set default value for scale if scale is not configured
@@ -394,9 +429,9 @@ func validateMetricConfig(metricConfigs Metrics) serror.SnapError {
 }
 
 //validateNamespace validates configuration of metric namespace
-func validateNamespace(namespaceConfig []Namespace) serror.SnapError {
+func validateNamespace(namespaceConfig []Namespace) error {
 	if len(namespaceConfig) == 0 {
-		return serror.New(fmt.Errorf("Missing namespace configuration"))
+		return fmt.Errorf("Missing namespace configuration")
 	}
 
 	for _, nsCfg := range namespaceConfig {
@@ -404,37 +439,37 @@ func validateNamespace(namespaceConfig []Namespace) serror.SnapError {
 		case NsSourceString:
 			//check required  parameter for source set to string
 			if !checkSetParameter(nsCfg.String) {
-				return serror.New(fmt.Errorf("Cannot find `string` parameter in configuration namespace element"))
+				return fmt.Errorf("Cannot find `string` parameter in configuration namespace element")
 			}
 		case NsSourceSNMP:
 			//check required  parameter for source set to snmp
 			if !checkSetParameter(nsCfg.Oid) {
-				return serror.New(fmt.Errorf("Cannot find `OID` parameter in configuration namespace element"))
+				return fmt.Errorf("Cannot find `OID` parameter in configuration namespace element")
 			}
 
 			if !checkSetParameter(nsCfg.Name) {
-				return serror.New(fmt.Errorf("Cannot find `name` parameter in configuration namespace element"))
+				return fmt.Errorf("Cannot find `name` parameter in configuration namespace element")
 			}
 
 			if !checkSetParameter(nsCfg.Description) {
-				return serror.New(fmt.Errorf("Cannot find `description` parameter in configuration namespace element"))
+				return fmt.Errorf("Cannot find `description` parameter in configuration namespace element")
 			}
 		case NsSourceIndex:
 			//check required  parameter for source set to index
 			if !checkSetParameter(nsCfg.OidPart) {
-				return serror.New(fmt.Errorf("Cannot find `oid_part` parameter in configuration namespace element"))
+				return fmt.Errorf("Cannot find `oid_part` parameter in configuration namespace element")
 			}
 
 			if !checkSetParameter(nsCfg.Name) {
-				return serror.New(fmt.Errorf("Cannot find `name` parameter in configuration namespace element"))
+				return fmt.Errorf("Cannot find `name` parameter in configuration namespace element")
 			}
 
 			if !checkSetParameter(nsCfg.Description) {
-				return serror.New(fmt.Errorf("Cannot find `description` parameter in configuration namespace element"))
+				return fmt.Errorf("Cannot find `description` parameter in configuration namespace element")
 			}
 		default:
-			return serror.New(fmt.Errorf("Incorrect value of `source` (%s) in namespace configuration, possible options: %v",
-				nsCfg.Source, []string{NsSourceString, NsSourceSNMP, NsSourceIndex}))
+			return fmt.Errorf("Incorrect value of `source` (%s) in namespace configuration, possible options: %v",
+				nsCfg.Source, []string{NsSourceString, NsSourceSNMP, NsSourceIndex})
 		}
 	}
 	return nil

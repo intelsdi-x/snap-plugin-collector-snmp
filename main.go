@@ -20,10 +20,8 @@ limitations under the License.
 package main
 
 import (
-	"os"
-
 	"github.com/intelsdi-x/snap-plugin-collector-snmp/collector"
-	"github.com/intelsdi-x/snap/control/plugin"
+	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 )
 
 func main() {
@@ -33,9 +31,5 @@ func main() {
 		panic("Plugin could not be initialized")
 	}
 
-	plugin.Start(
-		collector.Meta(),
-		plg,
-		os.Args[1],
-	)
+	plugin.StartCollector(plg, collector.PluginName, collector.Version, plugin.RoutingStrategy(plugin.StickyRouter), plugin.ConcurrencyCount(1))
 }

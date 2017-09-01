@@ -380,6 +380,30 @@ $ snaptel task watch <task_id>
 $ snaptel task stop <task_id>
 ```
 
+#### Running in plugin diagnostic mode:
+Plugin can be started in plugin diagnostic mode without need for Snap daemon to be running. This mode can be used for checking plugin output in development process.
+
+General rule for runnig diagnostic mode is to launch plugin binary. This plugin needs configuration, so it is needed to pass that configuration as argument. For example:
+
+```bash
+$ ./build/linux/x86_64/snap-plugin-collector-snmp --config '{
+    "setfile": "setfile.json",
+    "snmp_agent_name": "host1",
+    "snmp_agent_address": "127.0.0.1:161",
+    "snmp_version": "v3",
+    "network": "udp",
+    "user_name": "user",
+    "security_level": "AuthPriv",
+    "auth_password": "password",
+    "auth_protocol": "MD5",
+    "priv_protocol": "DES",
+    "priv_password": "password"
+}'
+```
+
+If configuration is valid, plugin should output metric catalog and collected metrics to standard output.
+As runnig diagnostic mode command for this plugin is not handy, you can find above example as Bash script in `examples/standalone.sh`.
+
 ### Roadmap
 There isn't a current roadmap for this plugin, but it is in active development. As we launch this plugin, we do not have any outstanding requirements for the next release.
 
