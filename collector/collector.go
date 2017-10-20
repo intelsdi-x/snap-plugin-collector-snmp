@@ -28,13 +28,13 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/intelsdi-x/snap-plugin-collector-snmp/collector/configReader"
 	"github.com/intelsdi-x/snap-plugin-collector-snmp/collector/snmp"
 	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 	"github.com/intelsdi-x/snap-plugin-utilities/ns"
 	"github.com/intelsdi-x/snap/core"
 	"github.com/k-sone/snmpgo"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
