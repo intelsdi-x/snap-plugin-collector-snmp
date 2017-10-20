@@ -1,5 +1,5 @@
-hash: 0e38513c715c04597ca53d8089b6e322209c1fd02ddf13ddc4c3b3fdd9afb86a
-updated: 2017-10-20T13:54:07.99193813+08:00
+hash: a40d4eaf5a69c2dd511743f35938803cb5cc7a06a4f0664f1b61ea392b4e7b42
+updated: 2017-10-20T16:53:06.332139328+08:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: ca5f9e638c83bac66bfac70ded5bded1503135a7
@@ -37,7 +37,7 @@ imports:
   - ns
   - str
 - name: github.com/julienschmidt/httprouter
-  version: 975b5c4c7c21c0e3d2764200bf2aa8e34657ae6e
+  version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
 - name: github.com/k-sone/snmpgo
   version: de09377ff34857b08afdc16ea8c7c2929eb1fc6e
 - name: github.com/mitchellh/mapstructure
@@ -47,9 +47,9 @@ imports:
 - name: github.com/robfig/cron
   version: 736158dc09e10f1911ca3a1e1b01f11b566ce5db
 - name: github.com/sirupsen/logrus
-  version: 89742aefa4b206dcf400792f3bd35b542998eb3b
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/urfave/cli
-  version: 7bc6a0acffa589f415f88aca16cc1de5ffd66f9c
+  version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
 - name: golang.org/x/crypto
   version: 541b9d50ad47e36efd8fb423e938e59ff1691f68
   subpackages:
@@ -81,10 +81,9 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: de0cff50aabf5cdbe9b03732ffc4a29c25e368d9
+  version: f7bf885db0b7479a537ec317c6e48ce53145f3db
   subpackages:
   - balancer
-  - balancer/roundrobin
   - codes
   - connectivity
   - credentials
@@ -96,7 +95,6 @@ imports:
   - naming
   - peer
   - resolver
-  - resolver/dns
   - stats
   - status
   - tap
