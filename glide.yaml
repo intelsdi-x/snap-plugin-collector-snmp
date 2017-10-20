@@ -1,13 +1,11 @@
 package: github.com/intelsdi-x/snap-plugin-collector-snmp
 import:
-- package: github.com/Sirupsen/logrus
-  version: ^0.11.0
-- package: github.com/intelsdi-x/snap-plugin-lib-go
-  subpackages:
-  - v1
 - package: github.com/k-sone/snmpgo
   version: ^3.0.2
 - package: github.com/mitchellh/mapstructure
+- package: github.com/sirupsen/logrus
+  version: ^1.0.2
+- package: github.com/intelsdi-x/snap-plugin-lib-go
 testImport:
 - package: github.com/smartystreets/goconvey
   version: ^1.6.2
