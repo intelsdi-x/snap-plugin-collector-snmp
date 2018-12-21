@@ -1,3 +1,11 @@
+
+# DISCONTINUATION OF PROJECT 
+
+**This project will no longer be maintained by Intel.  Intel will not provide or guarantee development of or support for this project, including but not limited to, maintenance, bug fixes, new releases or updates.  Patches to this project are no longer accepted by Intel. If you have an ongoing need to use this project, are interested in independently developing it, or would like to maintain patches for the community, please create your own fork of the project.**
+
+
+
+
 # snap-plugin-collector-snmp
 
 This plugin collects metrics using SNMP (Simple Network Management Protocol). The plugin sends GET and GETNEXT requests to receive metrics from SNMP agents using numeric OID (Object Identifier) which indicates metric value or set of values.
